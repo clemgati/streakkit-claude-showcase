@@ -1,0 +1,95 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/guard-dangerous-bash.sh'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/protect-secrets.sh'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/format-edited-file.sh'",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/pre-compact.sh'",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/session-start.sh'",
+            "timeout": 15,
+            "statusMessage": "Reading toolchain state…"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/session-end.sh'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/subagent-log.sh'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/clement/Development/Sanbox/streakkit-claude-showcase/.codex/hooks/stop-summary.sh'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

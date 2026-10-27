@@ -142,6 +142,30 @@ duplicate every night is an audit people disable. Most nights it prints "Parity 
 
 `workflow_dispatch` is enabled so you can try it without waiting for the cron.
 
+### A job cancelled with no steps is a runner queue, not a failure
+
+Three of the five CI jobs need macOS: `:shared:allTests` includes the Kotlin/Native target,
+the iOS build needs Xcode, and the formatters are installed with Homebrew. GitHub's macOS
+capacity is finite, and a job that waits too long is **cancelled**, not failed.
+
+The signature is distinctive: `conclusion: cancelled`, a start and finish exactly the queue
+limit apart, and **no steps with any conclusion at all** — because nothing ever ran. It looks
+alarming in `gh run list`, which reports the run as a failure.
+
+```bash
+gh run rerun <run-id> --failed
+```
+
+That is the whole fix. It happened once here and passed on the re-run with no change to the
+code. Before assuming a flake, check that steps actually executed:
+
+```bash
+gh api repos/<owner>/<repo>/actions/runs/<id>/jobs \
+  --jq '.jobs[] | select(.conclusion=="cancelled") | .name, [.steps[].conclusion]'
+```
+
+An empty step list means the queue; a list ending in `failure` means your code.
+
 ### A broken workflow file cannot fail its own CI
 
 If a workflow's YAML is invalid, GitHub cannot read its `name:`, so the run appears in
