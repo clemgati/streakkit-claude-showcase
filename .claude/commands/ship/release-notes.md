@@ -4,22 +4,26 @@ argument-hint: "[since-ref, default: last tag]"
 allowed-tools: Bash(git log*), Bash(git describe*), Bash(git diff*), Read
 ---
 
-## Range
+## Last release tag
 
 ```!
-SINCE="${1:-$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)}"
-echo "since: $SINCE"
-git log --no-merges --pretty=format:'%h %s' "$SINCE"..HEAD | head -60
+git describe --tags --abbrev=0 || true
 ```
 
-## Files touched
+## Recent commits
 
 ```!
-SINCE="${1:-$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)}"
-git diff --stat "$SINCE"..HEAD | tail -20
+git log --no-merges --oneline -40 || true
 ```
 
 ## Your task
+
+The blocks above give you the last tag and the recent history. The range to describe is
+everything after that tag — or after `$ARGUMENTS` if one was given. Run
+`git diff --stat <ref>..HEAD` yourself if you need to see which files moved.
+
+Shell blocks here are kept to single commands with no `$()` substitution and no variables: see
+the authoring rules in docs/02, which this command was used to discover.
 
 Write release notes in Markdown with three sections — **Added**, **Fixed**, **Internal** — and
 nothing else. Then stop; do not create a tag, a release, or a commit.

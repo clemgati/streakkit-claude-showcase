@@ -5,16 +5,16 @@ allowed-tools: Bash(gh issue view*), Bash(gh issue list*), mcp__streakkit, Read,
 disable-model-invocation: true
 ---
 
-## Issue #$1
+## Issue #$ARGUMENTS
 
 ```!
-gh issue view "$1" --json number,title,body,labels,comments \
+gh issue view "$ARGUMENTS" --json number,title,body,labels,comments \
   --template '{{.title}}
 
 {{.body}}
 
 Labels: {{range .labels}}{{.name}} {{end}}
-Comments: {{len .comments}}' 2>&1 | head -60
+Comments: {{len .comments}}' 2>&1 | head -60 || true
 ```
 
 ## Similar open issues
@@ -22,7 +22,7 @@ Comments: {{len .comments}}' 2>&1 | head -60
 ```!
 gh issue list --state open --limit 15 --json number,title \
   --template '{{range .}}#{{.number}} {{.title}}
-{{end}}' 2>&1 | head -20
+{{end}}' 2>&1 | head -20 || true
 ```
 
 ## Your task

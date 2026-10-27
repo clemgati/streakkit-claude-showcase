@@ -7,18 +7,21 @@ allowed-tools: Bash(xcodebuild*), Bash(xcrun simctl list*), Bash(./gradlew :shar
 ## Available simulators
 
 ```!
-xcrun simctl list devices available | grep -E 'iPhone' | head -6
+xcrun simctl list devices available | grep -E 'iPhone' | head -6 || true
 ```
 
 ## Build
 
 ```!
 cd iosApp && xcodebuild -project StreakKit.xcodeproj -scheme StreakKit -configuration Debug \
-  -destination "platform=iOS Simulator,name=${1:-iPhone 17 Pro}" \
-  -derivedDataPath build/DerivedData build 2>&1 | grep -E '(error|warning|BUILD)' | head -30
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -derivedDataPath build/DerivedData build 2>&1 | grep -E '(error|warning|BUILD)' | head -30 || true
 ```
 
 ## Your task
+
+The block above builds against iPhone 17 Pro. If `$ARGUMENTS` names a different simulator,
+re-run the build for that one yourself before reporting.
 
 Report the verdict in one line. If it failed, the cause is almost always one of these four, in
 descending order of likelihood — check them in order rather than reading the whole log:

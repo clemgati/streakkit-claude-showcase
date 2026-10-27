@@ -6,21 +6,22 @@ allowed-tools: Bash(xcodebuild*), Bash(xcrun simctl*), Read
 
 ```!
 set -e
-SIM="${1:-iPhone 17 Pro}"
 cd iosApp
-xcrun simctl boot "$SIM" 2>/dev/null || true
-xcrun simctl bootstatus "$SIM" -b >/dev/null 2>&1 || true
+xcrun simctl boot "iPhone 17 Pro" 2>/dev/null || true
+xcrun simctl bootstatus "iPhone 17 Pro" -b >/dev/null 2>&1 || true
 xcodebuild -project StreakKit.xcodeproj -scheme StreakKit -configuration Debug \
-  -destination "platform=iOS Simulator,name=$SIM" \
+  -destination "platform=iOS Simulator,name=iPhone 17 Pro" \
   -derivedDataPath build/DerivedData build 2>&1 | tail -3
-xcrun simctl install "$SIM" build/DerivedData/Build/Products/Debug-iphonesimulator/StreakKit.app
-xcrun simctl launch "$SIM" dev.clement.streakkit.ios
+xcrun simctl install "iPhone 17 Pro" build/DerivedData/Build/Products/Debug-iphonesimulator/StreakKit.app
+xcrun simctl launch "iPhone 17 Pro" dev.clement.streakkit.ios
 sleep 4
-xcrun simctl io "$SIM" screenshot /tmp/streakkit-ios.png
+xcrun simctl io "iPhone 17 Pro" screenshot /tmp/streakkit-ios.png
 echo "screenshot: /tmp/streakkit-ios.png"
 ```
 
 ## Your task
+
+The block uses iPhone 17 Pro. If `$ARGUMENTS` names another simulator, re-run for that one.
 
 Read `/tmp/streakkit-ios.png` and describe what is actually on screen — not what the code implies
 should be. A screenshot is the only cheap way to catch the failures that compile perfectly:
