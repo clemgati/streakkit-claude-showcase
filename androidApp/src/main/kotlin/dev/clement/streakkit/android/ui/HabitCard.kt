@@ -66,7 +66,7 @@ fun HabitCard(
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = streakLabel(habit),
+                        text = habit.streakLabel,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -185,12 +185,6 @@ private fun WeekStrip(
     }
 }
 
-private fun streakLabel(habit: HabitSummary): String = when {
-    habit.currentStreak == 0 && habit.longestStreak == 0 -> "No check-ins yet"
-    habit.currentStreak == 0 -> "Streak broken · best ${habit.longestStreak}"
-    else -> "🔥 ${habit.currentStreak} day streak · best ${habit.longestStreak}"
-}
-
 @Preview
 @Composable
 private fun HabitCardPreview() {
@@ -218,6 +212,7 @@ private fun HabitCardPreview() {
                     weeklyDone = 5,
                     weeklyGoalLabel = "5 / 5 this week",
                     completionLabel = "60% of the last 30 days",
+                    streakLabel = "🔥 5 day streak · best 12",
                 ),
             onToggleToday = {},
             onToggleDay = {},

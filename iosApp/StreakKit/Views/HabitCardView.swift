@@ -14,7 +14,7 @@ struct HabitCardView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(habit.name).font(.headline)
-                    Text(streakLabel)
+                    Text(habit.streakLabel)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -89,20 +89,15 @@ struct HabitCardView: View {
                         }
                     }
                     .frame(width: 32, height: 32)
+                    // Without this the tap target is the 1pt ring, not the circle: SwiftUI does
+                    // not hit-test a `.fill(Color.clear)`, so an *unchecked* day — the one users
+                    // tap most — was almost unhittable. Compose's `.clickable` box always covered
+                    // the whole 32dp cell, so the two platforms disagreed where it mattered.
+                    .contentShape(Circle())
                     .onTapGesture { onToggleDay(day.isoDate) }
                 }
                 .frame(maxWidth: .infinity)
             }
         }
-    }
-
-    private var streakLabel: String {
-        if habit.currentStreak == 0 && habit.longestStreak == 0 {
-            return "No check-ins yet"
-        }
-        if habit.currentStreak == 0 {
-            return "Streak broken · best \(habit.longestStreak)"
-        }
-        return "🔥 \(habit.currentStreak) day streak · best \(habit.longestStreak)"
     }
 }

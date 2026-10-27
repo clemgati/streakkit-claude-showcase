@@ -170,6 +170,24 @@ class HabitsStoreTest {
     }
 
     @Test
+    fun `the streak label covers all three states and is rendered once`() = runTest {
+        // Was a `when` in Compose and a chain of `if`s in SwiftUI, spelling out the same three
+        // strings independently. Found by /kmp:parity-check.
+        val (sut, _) = store()
+
+        sut.addHabit("Floss", "🦷")
+        assertEquals("No check-ins yet", sut.only().streakLabel)
+
+        sut.toggleToday(sut.only().id)
+        assertEquals("🔥 1 day streak · best 1", sut.only().streakLabel)
+
+        // Undo today and check in three days ago: a history, but no live streak.
+        sut.toggleToday(sut.only().id)
+        sut.toggleDay(sut.only().id, "2026-10-23")
+        assertEquals("Streak broken · best 1", sut.only().streakLabel)
+    }
+
+    @Test
     fun `percent formatting rounds half away from zero`() {
         // 0.125 * 100 = 12.5 — the boundary where half-to-even would give 12, not 13.
         assertEquals("13", formatPercent(0.125f))

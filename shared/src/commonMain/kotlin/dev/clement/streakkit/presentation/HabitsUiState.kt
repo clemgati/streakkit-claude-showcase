@@ -47,6 +47,12 @@ data class HabitSummary(
      * one of them silently different at the .5 boundary. Rendering it once removes the question.
      */
     val completionLabel: String,
+    /**
+     * Pre-rendered for the same reason, and the one that had actually drifted furthest: it was a
+     * `when` in Compose and a chain of `if`s in SwiftUI, each spelling out the same three strings.
+     * They happened to match. Nothing made them match.
+     */
+    val streakLabel: String,
 ) {
     val weeklyGoalMet: Boolean get() = weeklyDone >= weeklyGoal
 }
@@ -83,6 +89,10 @@ internal fun Habit.summarize(today: LocalDate): HabitSummary = HabitSummary(
     weeklyGoalLabel = "${StreakCalculator.weeklyProgress(checkIns, today)} / $weeklyGoal this week",
     completionLabel = formatPercent(StreakCalculator.completionRate(checkIns, today)) +
         "% of the last 30 days",
+    streakLabel = streakLabel(
+        current = StreakCalculator.currentStreak(checkIns, today),
+        longest = StreakCalculator.longestStreak(checkIns),
+    ),
 )
 
 /**
@@ -92,3 +102,13 @@ internal fun Habit.summarize(today: LocalDate): HabitSummary = HabitSummary(
  * on both platforms, and a locale-aware formatter is the opposite of that.
  */
 internal fun formatPercent(rate: Float): String = ((rate * 100f) + 0.5f).toInt().toString()
+
+/** The three states a streak line can be in. Both apps render the result verbatim. */
+internal fun streakLabel(
+    current: Int,
+    longest: Int,
+): String = when {
+    current == 0 && longest == 0 -> "No check-ins yet"
+    current == 0 -> "Streak broken · best $longest"
+    else -> "🔥 $current day streak · best $longest"
+}
