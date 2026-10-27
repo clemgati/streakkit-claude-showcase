@@ -37,6 +37,16 @@ data class HabitSummary(
     val weeklyDone: Int,
     /** Pre-rendered so neither UI can format it differently. */
     val weeklyGoalLabel: String,
+    /**
+     * Pre-rendered for the same reason.
+     *
+     * Previously each app built this string itself — `roundToInt()` on Android and
+     * `Int(_.rounded())` on iOS. Those happen to agree, but they are not the same function:
+     * Kotlin rounds half away from zero, Swift's `rounded()` rounds half away from zero too,
+     * while `String(format:)` rounds half to even. Three plausible spellings, two behaviours,
+     * one of them silently different at the .5 boundary. Rendering it once removes the question.
+     */
+    val completionLabel: String,
 ) {
     val weeklyGoalMet: Boolean get() = weeklyDone >= weeklyGoal
 }
@@ -71,4 +81,14 @@ internal fun Habit.summarize(today: LocalDate): HabitSummary = HabitSummary(
     // Formatted here, once. If either UI built this string itself the two could drift —
     // which is the defect class this whole module exists to prevent.
     weeklyGoalLabel = "${StreakCalculator.weeklyProgress(checkIns, today)} / $weeklyGoal this week",
+    completionLabel = formatPercent(StreakCalculator.completionRate(checkIns, today)) +
+        "% of the last 30 days",
 )
+
+/**
+ * Whole-percent formatting, half away from zero, with no platform number formatter involved.
+ *
+ * Deliberately arithmetic rather than a locale-aware formatter: this string must be byte-identical
+ * on both platforms, and a locale-aware formatter is the opposite of that.
+ */
+internal fun formatPercent(rate: Float): String = ((rate * 100f) + 0.5f).toInt().toString()

@@ -57,10 +57,7 @@ class HabitsStoreTest {
 
         assertTrue(sut.state.value.isEmpty)
         // platformName resolves per target; on the JVM test run it is the Android actual.
-        assertTrue(
-            sut.state.value.platform
-                .isNotBlank(),
-        )
+        assertTrue(sut.state.value.platform.isNotBlank())
     }
 
     @Test
@@ -69,19 +66,11 @@ class HabitsStoreTest {
 
         sut.addHabit("Floss", "🦷")
         assertEquals(1, sut.state.value.habits.size)
-        assertEquals(
-            0,
-            sut.only()
-                .currentStreak,
-        )
+        assertEquals(0, sut.only().currentStreak)
 
-        sut.toggleToday(
-            sut.only()
-                .id,
-        )
+        sut.toggleToday(sut.only().id)
 
-        val summary =
-            sut.only()
+        val summary = sut.only()
         assertEquals(1, summary.currentStreak)
         assertTrue(summary.checkedInToday)
         assertEquals(1, sut.state.value.checkedInTodayCount)
@@ -102,11 +91,7 @@ class HabitsStoreTest {
 
         sut.addHabit("Floss", "")
 
-        assertEquals(
-            HabitsStore.DEFAULT_EMOJI,
-            sut.only()
-                .emoji,
-        )
+        assertEquals(HabitsStore.DEFAULT_EMOJI, sut.only().emoji)
     }
 
     @Test
@@ -115,8 +100,7 @@ class HabitsStoreTest {
         sut.addHabit("Floss", "🦷")
 
         val week =
-            sut.only()
-                .week
+            sut.only().week
 
         assertEquals(7, week.size)
         assertTrue(week.last().isToday)
@@ -128,13 +112,11 @@ class HabitsStoreTest {
         val (sut, _) = store()
         sut.addHabit("Floss", "🦷")
         val id =
-            sut.only()
-                .id
+            sut.only().id
 
         sut.toggleDay(id, "2026-10-25")
 
-        val summary =
-            sut.only()
+        val summary = sut.only()
         assertFalse(summary.checkedInToday)
         assertEquals(1, summary.currentStreak, "yesterday alone is still a live streak")
     }
@@ -146,11 +128,7 @@ class HabitsStoreTest {
 
         sut.refreshQuote()
 
-        assertEquals(
-            "Keep going",
-            sut.state.value.quote
-                ?.text,
-        )
+        assertEquals("Keep going", sut.state.value.quote?.text)
         assertFalse(sut.state.value.isQuoteOffline)
         assertFalse(sut.state.value.isQuoteLoading)
         assertEquals(1, api.calls)
@@ -181,14 +159,30 @@ class HabitsStoreTest {
     }
 
     @Test
+    fun `the completion label is rendered once in the shared module`() = runTest {
+        // Caught by the PR-review workflow: both apps were formatting this themselves, with
+        // roundToInt() on Android and Int(_.rounded()) on iOS. Neither app may compute it now.
+        val (sut, _) = store()
+        sut.addHabit("Floss", "🦷")
+        sut.toggleToday(sut.only().id)
+
+        assertEquals("3% of the last 30 days", sut.only().completionLabel)
+    }
+
+    @Test
+    fun `percent formatting rounds half away from zero`() {
+        // 0.125 * 100 = 12.5 — the boundary where half-to-even would give 12, not 13.
+        assertEquals("13", formatPercent(0.125f))
+        assertEquals("0", formatPercent(0f))
+        assertEquals("100", formatPercent(1f))
+    }
+
+    @Test
     fun `deleting a habit removes its summary`() = runTest {
         val (sut, _) = store()
         sut.addHabit("Floss", "🦷")
 
-        sut.deleteHabit(
-            sut.only()
-                .id,
-        )
+        sut.deleteHabit(sut.only().id)
 
         assertTrue(sut.state.value.isEmpty)
     }

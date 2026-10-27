@@ -43,7 +43,7 @@ struct HabitCardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 ProgressView(value: Double(habit.completionRate30d))
                 HStack {
-                    Text("\(Int((habit.completionRate30d * 100).rounded()))% of the last 30 days")
+                    Text(habit.completionLabel)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Spacer()

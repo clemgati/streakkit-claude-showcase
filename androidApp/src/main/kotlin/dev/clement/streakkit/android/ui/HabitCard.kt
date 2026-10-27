@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import dev.clement.streakkit.android.theme.StreakKitTheme
 import dev.clement.streakkit.presentation.DayMark
 import dev.clement.streakkit.presentation.HabitSummary
-import kotlin.math.roundToInt
 
 @Composable
 fun HabitCard(
@@ -115,7 +114,7 @@ fun HabitCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "${(habit.completionRate30d * 100).roundToInt()}% of the last 30 days",
+                        text = habit.completionLabel,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -218,6 +217,7 @@ private fun HabitCardPreview() {
                     weeklyGoal = 5,
                     weeklyDone = 5,
                     weeklyGoalLabel = "5 / 5 this week",
+                    completionLabel = "60% of the last 30 days",
                 ),
             onToggleToday = {},
             onToggleDay = {},
