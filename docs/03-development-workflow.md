@@ -13,6 +13,16 @@ printf 'sdk.dir=%s/Library/Android/sdk\n' "$HOME" > local.properties
 claude
 ```
 
+**Accept the trust prompt the first time `claude` starts here.** Workspace trust gates more than
+permissions: an untrusted folder contributes no slash commands, no skills, no subagents and no
+hooks, and its `permissions.allow` rules are ignored. The symptom is not an error — `/kmp:test`
+is simply an unknown command, and in `claude -p` it returns an empty result with zero turns and
+no diagnostic. If the repo's tooling appears to do nothing, check trust first:
+
+```bash
+claude -p "hello" 2>&1 >/dev/null | head -2   # prints the "not been trusted" notice if untrusted
+```
+
 The `SessionStart` hook reports what is installed and what is missing. Nothing in `.claude/`
 requires the optional tools — ktlint, swiftformat and xcodegen are all degrade-gracefully.
 

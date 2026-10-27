@@ -43,7 +43,12 @@ hook and script degrades gracefully without them.
 
 ## The Claude Code part
 
-Run `claude` in the repo root and try:
+Run `claude` in the repo root. **Accept the trust prompt on first launch** — until the folder is
+trusted, Claude Code loads none of this repository's commands, skills or hooks, and ignores its
+`permissions.allow` rules. In a headless `claude -p` run there is no prompt to accept, so a
+`/kmp:test` there silently does nothing; trust the folder interactively once first.
+
+Then try:
 
 ```
 /kmp:test                 # run the shared suite; failures explained by target

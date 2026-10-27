@@ -152,6 +152,26 @@ There is also `"disableAutoMode": "disable"` for the same treatment of `auto`.
 | `--debug=mcp` | Why a server did not connect. |
 | `"disableAllHooks": true` | Hooks off without deleting them. |
 
+### Workspace trust gates the whole `.claude/` directory
+
+The first thing to check when a freshly cloned repo behaves as though it has no configuration.
+Until you accept the trust dialog for a folder, Claude Code ignores its `permissions.allow`
+rules **and** does not load its commands, skills, subagents or hooks. `deny` and `ask` rules
+still apply — trust gates what a repository may *grant*, not what it may *forbid*, which is the
+right way round for a repo you just pulled from the internet.
+
+It is quiet about it. A project command in an untrusted folder is simply unknown, so
+`claude -p "/kmp:test"` returns an empty result, zero turns, and no error. The notice appears
+only on stderr:
+
+```
+Ignoring 26 permissions.allow entries from .claude/settings.json:
+this workspace has not been trusted.
+```
+
+Fix it by running `claude` interactively in the folder once and accepting, or by setting
+`projects["<abs-path>"].hasTrustDialogAccepted: true` in `~/.claude.json`.
+
 A config that looks right but does not apply is usually one of: a higher-precedence file setting
 the same key, a project file setting a key only user settings may set (`defaultMode: auto` and
 `bypassPermissions` are the two), or the folder not being trusted yet — `allow` rules and `env`
