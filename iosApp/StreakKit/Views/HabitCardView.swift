@@ -5,6 +5,7 @@ struct HabitCardView: View {
     let habit: HabitSummary
     let onToggleToday: () -> Void
     let onToggleDay: (String) -> Void
+    let onArchive: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -47,6 +48,8 @@ struct HabitCardView: View {
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Spacer()
+                    Button("Archive", action: onArchive)
+                        .font(.caption2)
                     Button("Delete", action: onDelete)
                         .font(.caption2)
                         .foregroundStyle(.red)

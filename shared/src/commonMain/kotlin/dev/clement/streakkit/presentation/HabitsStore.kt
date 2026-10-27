@@ -39,12 +39,14 @@ class HabitsStore(
     val state: StateFlow<HabitsUiState> =
         combine(repository.habits, quoteState) { habits, quote ->
             val now = today()
+            val (archived, active) = habits.partition { it.isArchived }
             HabitsUiState(
-                habits = habits.map { it.summarize(now) },
+                habits = active.map { it.summarize(now) },
                 quote = quote.quote,
                 isQuoteLoading = quote.isLoading,
                 isQuoteOffline = quote.isOffline,
                 platform = platformName,
+                archivedHabits = archived.map { it.summarize(now) },
             )
         }.stateIn(
             scope = scope,
@@ -78,6 +80,11 @@ class HabitsStore(
         habitId: String,
         isoDate: String,
     ) = repository.toggleCheckIn(habitId, LocalDate.parse(isoDate))
+
+    /** Two intents rather than one taking a `Bool`, so each Swift call site reads as what it does. */
+    fun archiveHabit(habitId: String) = repository.setArchived(habitId, archived = true)
+
+    fun unarchiveHabit(habitId: String) = repository.setArchived(habitId, archived = false)
 
     fun deleteHabit(habitId: String) = repository.delete(habitId)
 

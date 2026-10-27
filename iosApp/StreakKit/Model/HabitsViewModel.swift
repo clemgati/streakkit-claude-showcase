@@ -25,7 +25,8 @@ final class HabitsViewModel {
             quote: nil,
             isQuoteLoading: false,
             isQuoteOffline: false,
-            platform: ""
+            platform: "",
+            archivedHabits: []
         )
 
         // The store collects on Dispatchers.Main, so this closure arrives on the main thread.
@@ -54,6 +55,14 @@ final class HabitsViewModel {
 
     func toggleDay(habitId: String, isoDate: String) {
         store.toggleDay(habitId: habitId, isoDate: isoDate)
+    }
+
+    func archiveHabit(habitId: String) {
+        store.archiveHabit(habitId: habitId)
+    }
+
+    func unarchiveHabit(habitId: String) {
+        store.unarchiveHabit(habitId: habitId)
     }
 
     func deleteHabit(habitId: String) {

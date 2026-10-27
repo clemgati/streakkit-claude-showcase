@@ -35,6 +35,13 @@ data class Habit(
      * treatment.
      */
     val weeklyGoal: Int = DEFAULT_WEEKLY_GOAL,
+    /**
+     * Hidden from the main list, history intact. Archiving never touches [checkIns], so
+     * unarchiving restores the same streak.
+     *
+     * Defaulted for the same reason as [weeklyGoal].
+     */
+    val isArchived: Boolean = false,
 ) {
     init {
         require(weeklyGoal in 1..StreakCalculator.WEEK_LENGTH) {
@@ -46,6 +53,9 @@ data class Habit(
 
     /** Returns a copy with [date] added if absent, or removed if present. */
     fun toggling(date: LocalDate): Habit = copy(checkIns = if (date in checkIns) checkIns - date else checkIns + date)
+
+    /** Returns a copy with [isArchived] set to [archived]; check-ins are left alone. */
+    fun archiving(archived: Boolean): Habit = copy(isArchived = archived)
 
     companion object {
         /** Five days a week: ambitious enough to mean something, slack enough to survive a bad day. */

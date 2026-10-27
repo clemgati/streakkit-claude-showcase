@@ -196,6 +196,75 @@ class HabitsStoreTest {
     }
 
     @Test
+    fun `archived habits are excluded from the main list and today counts`() = runTest {
+        val (sut, _) = store()
+        sut.addHabit("Floss", "🦷")
+        sut.addHabit("Run", "🏃")
+        val run = sut.state.value.habits.first { it.name == "Run" }
+        sut.toggleToday(run.id)
+        sut.toggleDay(run.id, "2026-10-25")
+
+        sut.archiveHabit(run.id)
+
+        val state = sut.state.value
+        assertEquals(listOf("Floss"), state.habits.map { it.name })
+        assertEquals(0, state.checkedInTodayCount, "an archived check-in is not today's progress")
+        assertEquals(0, state.bestCurrentStreak, "an archived streak is not the best visible one")
+    }
+
+    @Test
+    fun `archived habits appear in the archived list`() = runTest {
+        val (sut, _) = store()
+        sut.addHabit("Floss", "🦷")
+        assertFalse(sut.state.value.hasArchived)
+
+        sut.archiveHabit(sut.only().id)
+
+        val state = sut.state.value
+        assertTrue(state.hasArchived)
+        assertEquals(listOf("Floss"), state.archivedHabits.map { it.name })
+    }
+
+    @Test
+    fun `unarchiving restores the habit with its streak intact`() = runTest {
+        val (sut, _) = store()
+        sut.addHabit("Floss", "🦷")
+        val id = sut.only().id
+        sut.toggleDay(id, "2026-10-25")
+        sut.toggleToday(id)
+
+        sut.archiveHabit(id)
+        sut.unarchiveHabit(id)
+
+        val summary = sut.only()
+        assertEquals(2, summary.currentStreak)
+        assertTrue(sut.state.value.archivedHabits.isEmpty())
+        assertFalse(sut.state.value.hasArchived)
+    }
+
+    @Test
+    fun `archived section label counts archived habits`() = runTest {
+        val (sut, _) = store()
+        sut.addHabit("Floss", "🦷")
+        sut.addHabit("Run", "🏃")
+
+        sut.state.value.habits.forEach { sut.archiveHabit(it.id) }
+
+        assertEquals("Archived · 2", sut.state.value.archivedSectionLabel)
+    }
+
+    @Test
+    fun `state is empty when every habit is archived`() = runTest {
+        val (sut, _) = store()
+        sut.addHabit("Floss", "🦷")
+
+        sut.archiveHabit(sut.only().id)
+
+        assertTrue(sut.state.value.isEmpty, "the main list shows its empty state")
+        assertTrue(sut.state.value.hasArchived, "while the archive still offers a way back")
+    }
+
+    @Test
     fun `deleting a habit removes its summary`() = runTest {
         val (sut, _) = store()
         sut.addHabit("Floss", "🦷")

@@ -49,6 +49,13 @@ class HabitRepository(
         mutate { habits -> habits.map { if (it.id == habitId) it.toggling(date) else it } }
     }
 
+    fun setArchived(
+        habitId: String,
+        archived: Boolean,
+    ) {
+        mutate { habits -> habits.map { if (it.id == habitId) it.archiving(archived) else it } }
+    }
+
     fun delete(habitId: String) {
         mutate { habits -> habits.filterNot { it.id == habitId } }
     }

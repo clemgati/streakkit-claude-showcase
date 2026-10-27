@@ -4,6 +4,7 @@ import SwiftUI
 struct HabitListView: View {
     @State private var viewModel = HabitsViewModel()
     @State private var isAddSheetPresented = false
+    @State private var isArchiveExpanded = false
 
     var body: some View {
         NavigationStack {
@@ -34,9 +35,14 @@ struct HabitListView: View {
                                 onToggleDay: { isoDate in
                                     viewModel.toggleDay(habitId: habit.id, isoDate: isoDate)
                                 },
+                                onArchive: { viewModel.archiveHabit(habitId: habit.id) },
                                 onDelete: { viewModel.deleteHabit(habitId: habit.id) }
                             )
                         }
+                    }
+
+                    if viewModel.state.hasArchived {
+                        archivedSection
                     }
 
                     // Proof that both apps read the same shared value.
@@ -66,6 +72,32 @@ struct HabitListView: View {
                 }
             }
         }
+    }
+
+    /// Mirrors the Compose archived section: a header carrying the shared label, then a compact
+    /// row per hidden habit with the way back.
+    private var archivedSection: some View {
+        DisclosureGroup(viewModel.state.archivedSectionLabel, isExpanded: $isArchiveExpanded) {
+            ForEach(viewModel.state.archivedHabits) { habit in
+                HStack(spacing: 12) {
+                    Text(habit.emoji).font(.headline)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(habit.name).font(.body)
+                        Text(habit.streakLabel)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Unarchive") {
+                        viewModel.unarchiveHabit(habitId: habit.id)
+                    }
+                    .font(.subheadline)
+                }
+                .padding(.vertical, 6)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     private var emptyState: some View {

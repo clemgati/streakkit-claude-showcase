@@ -13,15 +13,22 @@ import kotlinx.datetime.LocalDate
  * Swift-facing surface free of bridged value classes.
  */
 data class HabitsUiState(
+    /** The main list: active habits only. Every derived count below is over these. */
     val habits: List<HabitSummary> = emptyList(),
     val quote: Quote? = null,
     val isQuoteLoading: Boolean = false,
     val isQuoteOffline: Boolean = false,
     val platform: String = "",
+    /** Hidden from the main list and from today's counts, history intact. */
+    val archivedHabits: List<HabitSummary> = emptyList(),
 ) {
     val checkedInTodayCount: Int get() = habits.count { it.checkedInToday }
     val bestCurrentStreak: Int get() = habits.maxOfOrNull { it.currentStreak } ?: 0
     val isEmpty: Boolean get() = habits.isEmpty()
+    val hasArchived: Boolean get() = archivedHabits.isNotEmpty()
+
+    /** Pre-rendered so neither UI can spell the section header differently. */
+    val archivedSectionLabel: String get() = "Archived · ${archivedHabits.size}"
 }
 
 data class HabitSummary(

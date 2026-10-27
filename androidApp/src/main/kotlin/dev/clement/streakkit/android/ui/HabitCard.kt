@@ -37,6 +37,7 @@ fun HabitCard(
     habit: HabitSummary,
     onToggleToday: () -> Unit,
     onToggleDay: (isoDate: String) -> Unit,
+    onArchive: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -122,8 +123,13 @@ fun HabitCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    TextButton(onClick = onDelete) {
-                        Text("Delete", style = MaterialTheme.typography.labelSmall)
+                    Row {
+                        TextButton(onClick = onArchive) {
+                            Text("Archive", style = MaterialTheme.typography.labelSmall)
+                        }
+                        TextButton(onClick = onDelete) {
+                            Text("Delete", style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }
@@ -225,6 +231,7 @@ private fun HabitCardPreview() {
                 ),
             onToggleToday = {},
             onToggleDay = {},
+            onArchive = {},
             onDelete = {},
         )
     }

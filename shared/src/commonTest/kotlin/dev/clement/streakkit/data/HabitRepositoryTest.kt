@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -101,6 +102,50 @@ class HabitRepositoryTest {
         assertEquals("Floss", habit.name)
         assertEquals(2, habit.checkIns.size)
         assertEquals(Habit.DEFAULT_WEEKLY_GOAL, habit.weeklyGoal, "missing field falls back to the default")
+    }
+
+    @Test
+    fun `archiving a habit keeps its check-ins`() {
+        val repo = repository()
+        val habit = repo.add("Floss", "🦷", today)
+        repo.toggleCheckIn(habit.id, today)
+
+        repo.setArchived(habit.id, archived = true)
+
+        assertTrue(repo.only().isArchived)
+        assertEquals(setOf(today), repo.only().checkIns)
+
+        repo.setArchived(habit.id, archived = false)
+
+        assertFalse(repo.only().isArchived)
+        assertEquals(setOf(today), repo.only().checkIns)
+    }
+
+    @Test
+    fun `archived state survives a reload from the store`() {
+        val store = InMemoryKeyValueStore()
+        val repo = repository(store)
+        val habit = repo.add("Floss", "🦷", today)
+
+        repo.setArchived(habit.id, archived = true)
+
+        assertTrue(repository(store).only().isArchived)
+    }
+
+    @Test
+    fun `habits stored before isArchived existed decode as not archived`() {
+        // The payload the 0.2.0 release wrote: weeklyGoal present, no isArchived key.
+        val legacy =
+            """
+            [{"id":"id-0","name":"Floss","emoji":"🦷","createdOn":"2026-10-20",
+              "checkIns":["2026-10-25"],"weeklyGoal":3}]
+            """.trimIndent()
+        val store = InMemoryKeyValueStore(mapOf(HabitRepository.HABITS_KEY to legacy))
+
+        val habit = repository(store).only()
+
+        assertFalse(habit.isArchived, "missing field falls back to the default")
+        assertEquals(3, habit.weeklyGoal)
     }
 
     @Test

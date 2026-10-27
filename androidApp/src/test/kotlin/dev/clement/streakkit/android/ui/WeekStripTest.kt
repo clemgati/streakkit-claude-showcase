@@ -63,6 +63,7 @@ class WeekStripTest {
                 habit = summary(checkedIndices = emptySet()),
                 onToggleToday = {},
                 onToggleDay = { toggled = it },
+                onArchive = {},
                 onDelete = {},
             )
         }
@@ -83,6 +84,7 @@ class WeekStripTest {
                 habit = summary(checkedIndices = setOf(0, 1)),
                 onToggleToday = {},
                 onToggleDay = { tapped += it },
+                onArchive = {},
                 onDelete = {},
             )
         }
@@ -101,6 +103,7 @@ class WeekStripTest {
                 habit = summary(checkedIndices = setOf(0, 1, 2)),
                 onToggleToday = {},
                 onToggleDay = {},
+                onArchive = {},
                 onDelete = {},
             )
         }
