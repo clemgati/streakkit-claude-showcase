@@ -109,6 +109,6 @@ machinery for enforcing that rule.
 
 Built and verified on macOS 15 with JDK 21.0.11, Gradle 9.8.2, Kotlin 2.4.21, AGP 9.4.1,
 Xcode 26.6. Shared tests green on both targets; both apps build, install, launch and render
-identically. The GitHub Actions workflows are live; the Claude-powered ones authenticate with an
-`ANTHROPIC_API_KEY` repository secret — see
+identically. The GitHub Actions workflows are live; the Claude-powered ones accept either a
+`CLAUDE_CODE_OAUTH_TOKEN` or an `ANTHROPIC_API_KEY` repository secret — see
 [`docs/04-post-delivery-operations.md`](docs/04-post-delivery-operations.md).

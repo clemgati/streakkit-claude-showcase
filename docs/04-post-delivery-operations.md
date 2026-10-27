@@ -23,24 +23,39 @@ Or manually: install the [Claude GitHub App](https://github.com/apps/claude), th
 | `ANTHROPIC_API_KEY` | A Claude API key from the Console |
 | `CLAUDE_CODE_OAUTH_TOKEN` | A subscription. Generate with `claude setup-token` |
 
-**As committed, all four workflows use `anthropic_api_key`**, billed per token to the API
-account that owns the key. To use a subscription instead, swap that line for
-`claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` — it is commented in
-`claude.yml` ready to uncomment. The API key is the better default for a repository anyone else
-might maintain, because an OAuth token is tied to the subscription of whoever ran
-`claude setup-token`.
+**All four workflows declare both inputs**, so you set whichever secret suits you and nothing in
+the YAML needs editing. Both are `required: false` in the action, and an unset secret
+interpolates to an empty string that the action falls through, so the one you set is the one
+used. If you set both, the OAuth token wins — it is listed first.
+
+Which to pick:
+
+- **`CLAUDE_CODE_OAUTH_TOKEN`** — runs draw on an existing Pro/Max/Team subscription instead of
+  metered billing. Tied to the subscription of whoever ran `claude setup-token`, so it is a
+  personal credential.
+- **`ANTHROPIC_API_KEY`** — metered per token, not tied to anyone's login. The better choice for
+  a repository other people will maintain, and the only one that can carry a hard spend cap.
 
 Set the secret so the value never lands in shell history or a session transcript:
 
 ```bash
-# Create a key at https://console.anthropic.com → API keys, copy it, then:
+# Subscription:
+claude setup-token                       # prints a token; copy it
+gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo <owner>/<repo> \
+  && gh secret list --repo <owner>/<repo>
+
+# or metered API — create a key at https://console.anthropic.com → API keys:
 gh secret set ANTHROPIC_API_KEY --repo <owner>/<repo> \
   && gh secret list --repo <owner>/<repo>
 #   ? Paste your secret:   <- hidden input, not echoed, not stored in history
 ```
 
-The `&&` matters: the listing prints only if the set succeeded, so a silent failure cannot look
-like success.
+Two details that cause silent failures:
+
+- **Always pass `--repo`.** Without it `gh` targets whatever repository the current directory
+  maps to, which is easy to get wrong from the wrong terminal tab.
+- **Keep the `&&`.** The listing prints only if the set actually succeeded, so a failure cannot
+  be mistaken for success. `gh secret list` shows names and timestamps, never values.
 
 Verify with `gh secret list` — it shows names and timestamps, never values. A secret cannot be
 read back out of GitHub by anyone, including you.
