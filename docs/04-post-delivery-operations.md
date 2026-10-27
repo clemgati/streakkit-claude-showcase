@@ -3,13 +3,14 @@
 Everything in [03-development-workflow.md](03-development-workflow.md) assumes a human is
 driving. This document is the other half: what runs when nobody is at the keyboard.
 
-Nothing here is live yet — the repository has no remote. The workflows are committed and inert,
-and this document is the checklist for turning them on.
+The repository is published at
+<https://github.com/clemgati/streakkit-claude-showcase> and the workflows are live. This section
+is the checklist for reproducing that setup on a fresh fork or clone.
 
 ## Turning it on
 
 ```bash
-gh repo create streakkit-claude-showcase --private --source=. --remote=origin --push
+gh repo create <name> --public --source=. --remote=origin --push
 
 # Install the GitHub App, add the secret and the workflow files in one step:
 claude      # then: /install-github-app
@@ -22,13 +23,28 @@ Or manually: install the [Claude GitHub App](https://github.com/apps/claude), th
 | `ANTHROPIC_API_KEY` | A Claude API key from the Console |
 | `CLAUDE_CODE_OAUTH_TOKEN` | A subscription. Generate with `claude setup-token` |
 
-If you use the OAuth token, swap the `anthropic_api_key:` line in each workflow for
-`claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` — the line is commented in
-`claude.yml` ready to uncomment.
+**As committed, all four workflows use `claude_code_oauth_token`**, so a subscription is the
+zero-edit path. To move to metered API billing instead, swap that line for
+`anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}` — it is commented in `claude.yml` ready to
+uncomment. Prefer the API key if anyone other than you will maintain the repo, since an OAuth
+token is tied to the subscription of whoever ran `claude setup-token`.
+
+Set the secret so the value never lands in shell history or a session transcript:
+
+```bash
+claude setup-token          # prints the token; copy it
+gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo <owner>/<repo>
+#   ? Paste your secret:   <- hidden input, not echoed, not stored in history
+```
+
+Verify with `gh secret list` — it shows names and timestamps, never values. A secret cannot be
+read back out of GitHub by anyone, including you.
 
 > **Who can trigger a run.** The action rejects actors without write access, and rejects bots
 > unless listed in `allowed_bots`. That check also applies to scheduled runs, which GitHub
-> attributes to whoever last edited the cron.
+> attributes to whoever last edited the cron. On a **public** repository this is what stops a
+> stranger from spending your tokens by opening an issue — and GitHub additionally withholds
+> secrets from workflows triggered by pull requests from forks.
 
 ## What runs, and when
 
@@ -88,7 +104,7 @@ duplicate every night is an audit people disable. Most nights it prints "Parity 
 
 ## Scheduled work from your own machine
 
-Workflows need a remote. For local recurring work there is `/loop`:
+Workflows run on GitHub's schedule. For recurring work inside a local session there is `/loop`:
 
 ```
 /loop 30m /kmp:parity-check      # run it on an interval
