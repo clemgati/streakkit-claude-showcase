@@ -38,8 +38,11 @@ cd iosApp && xcodebuild -project StreakKit.xcodeproj -scheme StreakKit \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
-Requires JDK 21, Android SDK 37, and Xcode. Optional: `ktlint`, `swiftformat`, `xcodegen` — every
-hook and script degrades gracefully without them.
+Requires JDK 21, Android SDK 37, and Xcode — nothing else. `ktlint`, `swiftformat`, `xcodegen`,
+Node and `gh` are optional; every hook and script degrades gracefully without them.
+
+That is verified, not asserted: a fresh clone was built with `PATH=/usr/bin:/bin`, which hides
+every optional tool. See [Verified on a bare machine](docs/03-development-workflow.md#verified-on-a-bare-machine).
 
 ## The Claude Code part
 

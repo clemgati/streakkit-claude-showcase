@@ -26,6 +26,37 @@ claude -p "hello" 2>&1 >/dev/null | head -2   # prints the "not been trusted" no
 The `SessionStart` hook reports what is installed and what is missing. Nothing in `.claude/`
 requires the optional tools — ktlint, swiftformat and xcodegen are all degrade-gracefully.
 
+### Verified on a bare machine
+
+The claim that the optional tooling is genuinely optional is tested rather than assumed. A clean
+clone from GitHub, built with `PATH=/usr/bin:/bin` — which hides `ktlint`, `swiftformat`,
+`xcodegen`, `node`, `gh` and Homebrew entirely:
+
+| Check | Result |
+| --- | --- |
+| `./gradlew :shared:allTests --rerun-tasks` | 88 executions, 0 failures |
+| `./gradlew :androidApp:assembleDebug` | succeeded |
+| `./gradlew :androidApp:testDebugUnitTest` | 3 Compose UI tests, 0 failures |
+| `xcodebuild … build` with no XcodeGen installed | succeeded — the `.xcodeproj` is committed for this reason |
+| `streakkit_mcp.py parity` / `versions` | both correct; standard library only |
+| All ten hooks | exit 0, each emitting valid JSON or staying silent |
+| `format-edited-file.sh` with no ktlint | says `ktlint not installed — skipped formatting X. brew install ktlint`, and leaves the file untouched |
+
+The last two rows are the ones that matter. A hook that errors when a formatter is missing is a
+hook people delete, and a deleted hook protects nothing. A hook that *corrupts* the file it
+could not format is worse.
+
+Reproduce it with:
+
+```bash
+git clone <repo> /tmp/check && cd /tmp/check
+printf 'sdk.dir=%s/Library/Android/sdk\n' "$HOME" > local.properties
+PATH=/usr/bin:/bin ./gradlew :shared:allTests --rerun-tasks
+```
+
+> When checking hook output by hand, pipe with `printf`, not `echo`. zsh's `echo` interprets
+> `\u001b` and friends, which mangles a hook's JSON and makes a perfectly good hook look broken.
+
 ## The loop for a real change
 
 ### 1. Plan before editing
