@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
 
 concurrency:
@@ -38,6 +39,24 @@ jobs:
         with:
           name: shared-test-reports
           path: shared/build/reports/
+
+  versions:
+    name: Version consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Versions agree with each other
+        # Three places state the app's version: the Gradle script, project.yml, and the
+        # XcodeGen-generated Info.plist that is committed alongside it. The plist drifts the
+        # moment someone edits the YAML without regenerating.
+        run: python3 .claude/mcp/streakkit_mcp.py versions
+
+      - name: Versions agree with the release tag
+        # Only on a v* tag. A tag that disagrees with the shipped strings is invisible until a
+        # user reports a version that does not exist.
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: python3 .claude/mcp/streakkit_mcp.py versions --expect "${GITHUB_REF_NAME}"
 
   android:
     name: Android APK

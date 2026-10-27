@@ -167,6 +167,24 @@ both, and one that does not may be a parity bug rather than deliberate scope.
 
 It stops at the draft. Tagging and publishing stay manual; `gh release` is in `permissions.ask`.
 
+### Before you tag
+
+```bash
+python3 .claude/mcp/streakkit_mcp.py versions --expect v0.2.0
+```
+
+The app states its version in three places — `androidApp/build.gradle.kts`,
+`iosApp/project.yml`, and the XcodeGen-generated `iosApp/StreakKit/Info.plist` that is committed
+beside it. The plist drifts the moment someone edits the YAML without regenerating, and a release
+tag that disagrees with the shipped strings is invisible until a user reports a version that does
+not exist.
+
+CI enforces it: the **Version consistency** job checks the three against each other on every push
+and pull request, and additionally against the tag when the ref is a `v*` tag. `ci.yml` therefore
+runs on tag pushes as well as branches.
+
+The same check is available in a session as `mcp__streakkit__version_consistency`.
+
 ## Incident loop
 
 When a user reports a wrong number:

@@ -28,6 +28,7 @@ that would otherwise cost a dozen Grep calls at the start of every session.
 | `expect_actual_matrix` | Which `expect` declarations are missing an `actual`, and on which platform |
 | `ui_parity_report` | Which shared UI-state fields each app actually renders — the drift the compiler cannot see |
 | `streak_oracle` | What the streak numbers *should* be, computed independently of the Kotlin |
+| `version_consistency` | Whether the three places stating the app version agree — and match a release tag |
 | `project_stats` | File and line counts per module |
 | `run_gradle_task` | Runs one **allow-listed** Gradle task and returns the tail of its output |
 
@@ -61,6 +62,8 @@ python3 .claude/mcp/streakkit_mcp.py parity          # markdown matrix; exits 1 
 python3 .claude/mcp/streakkit_mcp.py expect-actual   # JSON; exits 1 if an actual is missing
 python3 .claude/mcp/streakkit_mcp.py ui-parity       # JSON
 python3 .claude/mcp/streakkit_mcp.py stats           # JSON
+python3 .claude/mcp/streakkit_mcp.py versions        # exits 1 if the version strings disagree
+python3 .claude/mcp/streakkit_mcp.py versions --expect v0.2.0
 python3 .claude/mcp/streakkit_mcp.py oracle \
   --check-ins 2026-10-21,2026-10-22,2026-10-23 --today 2026-10-26
 ```
