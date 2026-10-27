@@ -76,6 +76,34 @@ without supervision later — a strictly larger blast radius than any single com
 Note that `allow` does not beat `ask`: a local "yes, don't ask again" cannot override a project
 `ask` rule. That is what makes these lines meaningful in a shared file.
 
+### An `ask` rule is a `deny` rule in CI
+
+`ask` outranks `allow` wherever each is defined. That is what makes a shared `ask` rule
+meaningful for humans — a teammate's local "yes, don't ask again" cannot override it.
+
+The consequence is easy to miss: **in a non-interactive run there is nobody to answer, so every
+`ask` resolves to a refusal.** The GitHub Action loads this repository's `.claude/settings.json`
+(its `settingSources` are `user, project, local`), so the committed rules apply to it too.
+
+This repo shipped that bug. `Bash(gh issue*)` was in `ask`, and the issue-triage workflow — whose
+entire job is to label and comment on an issue — reported **success** while doing nothing. The
+agent reasoned correctly, ran the oracle, reached the right verdict, then hit:
+
+```
+Claude requested permissions to use Bash, but you haven't granted it yet.
+```
+
+It took three rounds to find, because a denied tool call inside the agent does not fail the job,
+and the run log does not include turn-by-turn tool use. The triage workflow now uploads the
+action's execution log as an artifact for exactly this reason.
+
+The fix was to take `gh issue*` out of `ask`: filing and labelling issues is reversible, it is
+what the automation exists to do, and `--allowedTools` already bounds it. `gh pr*` and
+`gh release*` stay — those are public and awkward to undo.
+
+**The rule of thumb:** put something in `ask` only if you would also be willing for automation to
+be unable to do it. For anything else, rely on `deny` plus a narrow `--allowedTools`.
+
 ## 4. Permission modes — the ladder
 
 | Mode | Behaviour | Use it for |
