@@ -21,7 +21,7 @@ xcuserdata/
 # Claude Code
 .claude/settings.local.json
 .claude/logs/
-.claude/handoff.md
+handoff.md
 
 # macOS / editors
 .DS_Store

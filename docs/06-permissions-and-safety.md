@@ -17,7 +17,8 @@ Code consults them.
   "Read(./local.properties)", "Read(./.env)", "Read(./.env.*)",
   "Read(./**/*.keystore)", "Read(./**/*.jks)",
   "Read(./**/google-services.json)", "Read(./**/GoogleService-Info.plist)",
-  "Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.gnupg/**)", "Read(~/.claude/**)",
+  "Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.gnupg/**)",
+  "Read(~/.claude/projects/**)", "Read(~/.claude/history.jsonl)", "Read(~/.claude/todos/**)",
   "Bash(sudo *)"
 ]
 ```
@@ -32,8 +33,10 @@ Two things about this syntax that are easy to get wrong:
   for filesystem-absolute and `~/` for home. `Read(/secrets/**)` in user settings means
   `~/.claude/secrets/**`, which is almost certainly not what you meant.
 
-`Read(~/.claude/**)` is here so a session cannot read your other projects' transcripts, which are
-not this repository's business.
+The `~/.claude` rules stop a session reading your other projects' transcripts and prompt history,
+which are not this repository's business. They are deliberately **narrow**: a blanket
+`Read(~/.claude/**)` also blocks `~/.claude/plans/`, so plan mode cannot save a plan — found by
+running `/kmp:new-feature`, which produced its plan and then could not write it anywhere.
 
 ## 2. PreToolUse hooks — explanation, and content inspection
 
@@ -151,6 +154,19 @@ There is also `"disableAutoMode": "disable"` for the same treatment of `auto`.
 | `/status` | Which settings files actually loaded. |
 | `--debug=mcp` | Why a server did not connect. |
 | `"disableAllHooks": true` | Hooks off without deleting them. |
+
+### Protected paths always prompt, and an allow rule does not override them
+
+`.claude/` and `.git/` are protected paths. A write to one prompts for approval regardless of
+your permission rules — adding `Edit(/.claude/handoff.md)` to `permissions.allow` changes
+nothing, which is easy to mistake for a broken rule.
+
+Interactively that is a single keystroke. Headlessly it is fatal: there is no prompt to answer,
+so the write fails and the run still reports success. `/dev:checkpoint` originally saved to
+`.claude/handoff.md` and could never work in `claude -p`; it writes `handoff.md` at the
+repository root instead, and the `PreCompact` hook writes the same path. Hooks are not subject
+to tool permissions, so the hook could write anywhere — keeping both on one path matters more
+than where that path is.
 
 ### Workspace trust gates the whole `.claude/` directory
 

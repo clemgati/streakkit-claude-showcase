@@ -19,7 +19,7 @@ git diff --stat | tail -15
 
 ## Your task
 
-Write `.claude/handoff.md` — overwriting whatever is there — with exactly these sections and
+Write `handoff.md` — overwriting whatever is there — with exactly these sections and
 nothing else:
 
 1. **Goal** — what this session is trying to achieve, in one sentence.
@@ -38,7 +38,11 @@ Rules that make this worth doing:
 - Leave out anything already in `CLAUDE.md` or the docs.
 
 Then tell the user the note is written and that they can now run `/compact` safely, or `/clear`
-and start fresh with `@.claude/handoff.md`.
+and start fresh with `@handoff.md`.
+
+Write it to `handoff.md` at the repository root, **not** under `.claude/`. Files under `.claude/`
+are a protected path: Claude Code prompts before writing one even when an explicit
+`Edit(/.claude/handoff.md)` allow rule exists, so a headless run can never save it.
 
 ### Why this exists
 

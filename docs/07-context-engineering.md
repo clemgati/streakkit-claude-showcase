@@ -15,9 +15,10 @@ The cheapest token is the one never produced.
 Gradle's rich console redraws progress bars continuously; captured as text, that is hundreds of
 lines of nothing. `--console=plain` is also passed explicitly in every command and workflow.
 
-The same instinct elsewhere: `/kmp:test` pipes through `tail -40`, `/android:build` greps for
-errors, and the MCP server's `run_gradle_task` returns the last 60 lines rather than the whole
-log — the verdict and the failures are always at the end.
+The same instinct elsewhere: `/kmp:test` and `/android:build` pipe through `tail`, and the MCP
+server's `run_gradle_task` returns the last 60 lines rather than the whole log — the verdict and
+the failures are always at the end. (Filtering with `grep` is tempting but its `$` anchors break
+`!` blocks; see the rules in docs/02.)
 
 ## 2. Load context by scope, not by default
 
@@ -59,7 +60,7 @@ be traced to which agent said it without re-running the audit.
 Compaction preserves meaning and loses detail. Exactly which details matter is predictable, so
 both are handled:
 
-**Automatic — `PreCompact` hook.** `pre-compact.sh` writes `.claude/handoff.md` with branch,
+**Automatic — `PreCompact` hook.** `pre-compact.sh` writes `handoff.md` with branch,
 status, recent commits, and diff stat. Mechanical state, cheap to recover from the filesystem,
 expensive to recover from a summary. It runs whether or not you were paying attention.
 
@@ -85,7 +86,7 @@ both targets, so a later session "simplifies" it back.
 /compact                 # or let auto-compact happen
 # or for a clean break:
 /clear
-@.claude/handoff.md
+@handoff.md
 ```
 
 `autoCompactThreshold` (see `.claude/settings.local.json.example`) lowers the trigger point,

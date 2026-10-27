@@ -4,7 +4,7 @@
 #
 # Compaction preserves meaning but not detail: exact file paths, the branch you were on, which
 # gate last passed. Those are cheap to recover from the filesystem and expensive to recover from
-# a summary, so this hook snapshots them to .claude/handoff.md, which survives compaction, /clear,
+# a summary, so this hook snapshots them to handoff.md, which survives compaction, /clear,
 # and the end of the session.
 #
 # Pair it with `/dev:checkpoint`, which writes the same file on demand.
@@ -19,8 +19,7 @@ if command -v python3 >/dev/null 2>&1; then
   trigger="$(printf '%s' "$payload" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("trigger") or d.get("hook_event_name","compact"))' 2>/dev/null || echo compact)"
 fi
 
-OUT=".claude/handoff.md"
-mkdir -p .claude
+OUT="handoff.md"
 
 {
   echo "# Handoff note"
@@ -53,4 +52,4 @@ mkdir -p .claude
 } > "$OUT" 2>/dev/null || exit 0
 
 command -v python3 >/dev/null 2>&1 || exit 0
-python3 -c 'import json; print(json.dumps({"systemMessage": "Context handoff saved to .claude/handoff.md — read it after compaction instead of re-exploring the tree."}))'
+python3 -c 'import json; print(json.dumps({"systemMessage": "Context handoff saved to handoff.md — read it after compaction instead of re-exploring the tree."}))'

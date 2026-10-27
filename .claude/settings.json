@@ -1,13 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-
   "env": {
     "GRADLE_OPTS": "-Dorg.gradle.console=plain -Dorg.gradle.welcome=never"
   },
-
   "permissions": {
     "defaultMode": "default",
-
     "allow": [
       "Bash(./gradlew :shared:allTests*)",
       "Bash(./gradlew :shared:test*)",
@@ -36,7 +33,6 @@
       "WebFetch(domain:developer.android.com)",
       "WebFetch(domain:developer.apple.com)"
     ],
-
     "ask": [
       "Bash(git commit*)",
       "Bash(git push*)",
@@ -45,7 +41,6 @@
       "Edit(/.github/workflows/**)",
       "Bash(xcrun simctl erase*)"
     ],
-
     "deny": [
       "Read(./local.properties)",
       "Read(./.env)",
@@ -57,18 +52,19 @@
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
       "Read(~/.gnupg/**)",
-      "Read(~/.claude/**)",
+      "Read(~/.claude/projects/**)",
+      "Read(~/.claude/history.jsonl)",
+      "Read(~/.claude/todos/**)",
       "Bash(sudo *)"
     ]
   },
-
-  "enabledMcpjsonServers": ["streakkit"],
-
+  "enabledMcpjsonServers": [
+    "streakkit"
+  ],
   "statusLine": {
     "type": "command",
     "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/statusline.sh"
   },
-
   "hooks": {
     "SessionStart": [
       {
@@ -78,12 +74,11 @@
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.sh",
             "timeout": 15,
-            "statusMessage": "Reading toolchain state…"
+            "statusMessage": "Reading toolchain state\u2026"
           }
         ]
       }
     ],
-
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -98,7 +93,7 @@
             "if": "Bash(rm *)",
             "model": "claude-haiku-4-5-20251001",
             "timeout": 20,
-            "statusMessage": "Checking what this delete touches…",
+            "statusMessage": "Checking what this delete touches\u2026",
             "prompt": "You are a safety check for a Kotlin Multiplatform repo. A regex guard has already rejected the obviously catastrophic deletes, so your job is the novel ones it cannot pattern-match.\n\nCommand: ${tool_input.command}\n\nAllow it if it only removes regenerable artifacts: build/, .gradle/, DerivedData/, *.apk, *.ipa, xcode-frameworks/, or a file the session just created. Deny it if it removes tracked source, a .xcodeproj, a Gradle script, anything under .claude/, or anything outside this repository.\n\nReply with ONLY this JSON and nothing else:\n{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\" or \"deny\", \"permissionDecisionReason\": \"one sentence\"}}"
           }
         ]
@@ -114,7 +109,6 @@
         ]
       }
     ],
-
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
@@ -127,7 +121,6 @@
         ]
       }
     ],
-
     "SubagentStop": [
       {
         "hooks": [
@@ -139,7 +132,6 @@
         ]
       }
     ],
-
     "PreCompact": [
       {
         "hooks": [
@@ -151,7 +143,6 @@
         ]
       }
     ],
-
     "Stop": [
       {
         "hooks": [
@@ -163,7 +154,6 @@
         ]
       }
     ],
-
     "Notification": [
       {
         "hooks": [
@@ -176,7 +166,6 @@
         ]
       }
     ],
-
     "SessionEnd": [
       {
         "hooks": [

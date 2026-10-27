@@ -85,12 +85,14 @@ What breaks a block, all established by bisection:
 | `${1:-default}` | no | `$1` is substituted *inside* the braces, producing invalid bash |
 | `X="value"` on its own line | no | A bare assignment is a subcommand the permission layer cannot classify |
 | `$(cmd)` inside a pipeline | no | Commands inside `$()` are checked separately, and the compound shape matches no rule |
+| a bare `$` anywhere, even quoted | no | `grep -vE '^\s*$'` is enough to abort the block |
 | `$ARGUMENTS` | yes | Substituted as plain text |
 | `$(cmd)` on its own, e.g. `echo "$(git describe)"` | yes | |
 | pipelines, `|| true`, `if/then/fi` | yes | |
 
-**The rule that falls out: one simple command per block, ending in `|| true`, using `$ARGUMENTS`
-and never `$1`.** Anything more elaborate belongs in the prose, where you ask Claude to run it as
+**The rule that falls out: one simple command per block, ending in `|| true`, and no `$` at all
+except `$ARGUMENTS`.** A `$` inside a quoted regex is enough — `grep -vE '^\s*$'` silently
+killed `/android:build`. Prefer a filter that needs no anchor, or drop the filter and `tail`. Anything more elaborate belongs in the prose, where you ask Claude to run it as
 an ordinary tool call.
 
 `/ship:release-notes` shows the shape — two one-line blocks give the last tag and the recent
@@ -185,7 +187,7 @@ session. That rule is what makes committed hooks safe to inherit.
 | `PreToolUse(Edit\|Write)` | `protect-secrets.sh` | Blocks edits to `local.properties`/keystores, and blocks writing anything that pattern-matches a credential. |
 | `PostToolUse(Edit\|Write)` | `format-edited-file.sh` | ktlint/swiftformat on the file just written. |
 | `SubagentStop` | `subagent-log.sh` | One line per finished subagent to `.claude/logs/`. |
-| `PreCompact` | `pre-compact.sh` | Snapshots git state to `.claude/handoff.md` before summarisation. |
+| `PreCompact` | `pre-compact.sh` | Snapshots git state to `handoff.md` before summarisation. |
 | `Stop` | `stop-summary.sh` | "N uncommitted files in: shared androidApp". |
 | `Notification` | `notify.sh` | macOS banner + OSC 777 terminal sequence. `async: true`. |
 | `SessionEnd` | `session-end.sh` | Appends to a session log. |
@@ -287,7 +289,7 @@ Four mechanisms, in increasing order of deliberateness:
 1. **Scoped loading.** Module `CLAUDE.md` files and `paths:`-scoped skills mean a session starts
    with what it needs and not the rest.
 2. **`PreCompact` hook.** `pre-compact.sh` writes git state, recent commits and diff stat to
-   `.claude/handoff.md` before summarisation. Those details are cheap to recover from the
+   `handoff.md` before summarisation. Those details are cheap to recover from the
    filesystem and expensive to recover from a summary.
 3. **`/dev:checkpoint`.** Writes the half a hook cannot: goal, what is done and which gate proved
    it, what is half-finished and the exact next edit, and — the valuable section — *decisions and
@@ -303,7 +305,7 @@ Four mechanisms, in increasing order of deliberateness:
 /compact               # or let it happen; the hook has you covered either way
 # or, for a clean break:
 /clear
-@.claude/handoff.md    # start the next session from the note
+@handoff.md    # start the next session from the note
 ```
 
 `autoCompactThreshold` (see `settings.local.json.example`) lowers the trigger point, which is

@@ -6,7 +6,7 @@ effort: low
 ---
 
 ```!
-./gradlew :androidApp:assembleDebug --console=plain 2>&1 | grep -vE '^\s*$' | tail -30
+./gradlew :androidApp:assembleDebug --console=plain 2>&1 | tail -30 || true
 ```
 
 ## Your task
