@@ -68,6 +68,11 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compose UI tests
+        # Robolectric, so these run on the JVM and this job still needs no emulator.
+        run: ./gradlew :androidApp:testDebugUnitTest --console=plain
+
       - run: ./gradlew :androidApp:assembleDebug --console=plain
       - uses: actions/upload-artifact@v4
         with:
@@ -95,6 +100,21 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/DerivedData \
             build | tail -20
+
+      - name: XCUITests
+        # Needs a concrete booted device, unlike the build above. The simulator name is resolved
+        # from whatever the runner image ships rather than pinned, because Xcode drops devices
+        # between images and a hard-coded name is the usual cause of a green repo going red.
+        run: |
+          cd iosApp
+          DEVICE=$(xcrun simctl list devices available --json \
+            | python3 -c "import json,sys; ds=json.load(sys.stdin)['devices']; \
+print(next(d['name'] for rt in ds for d in ds[rt] if 'iPhone' in d['name']))")
+          echo "Testing on: $DEVICE"
+          xcodebuild test -project StreakKit.xcodeproj -scheme StreakKit \
+            -destination "platform=iOS Simulator,name=$DEVICE" \
+            -derivedDataPath build/DerivedData \
+            | grep -E "Test Case|TEST (SUCCEEDED|FAILED)" | tail -20
 
   lint:
     name: Formatting

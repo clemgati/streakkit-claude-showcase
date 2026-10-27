@@ -9,7 +9,7 @@ codebase.
 | Shared logic | Kotlin Multiplatform (`shared/`) — domain, persistence, networking, presentation |
 | Android | Jetpack Compose + Material 3 |
 | iOS | Native SwiftUI |
-| Tests | 41 tests, run on **both** JVM and Kotlin/Native (82 executions) |
+| Tests | 44 shared tests on **both** JVM and Kotlin/Native (88 executions), plus UI tests on each platform |
 
 <p align="center">
   <img src="docs/images/ios-habit-list.png" width="300" alt="StreakKit on iOS">

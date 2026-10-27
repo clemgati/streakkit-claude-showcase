@@ -63,7 +63,23 @@ data class DayMark(
     val isChecked: Boolean,
     val isToday: Boolean,
     val isoDate: String,
-)
+) {
+    /**
+     * Stable per-cell identifier for accessibility and UI tests, identical on both platforms.
+     *
+     * A test that queries by this can be written once and asserted the same way in XCUITest and
+     * Compose, which is the only way a cross-platform interaction stays comparable.
+     */
+    val accessibilityId: String get() = "week-day-$isoDate"
+
+    /** What a screen reader announces, and what a UI test asserts on. */
+    val accessibilityState: String get() = if (isChecked) CHECKED else NOT_CHECKED
+
+    companion object {
+        const val CHECKED: String = "checked"
+        const val NOT_CHECKED: String = "not checked"
+    }
+}
 
 internal fun Habit.summarize(today: LocalDate): HabitSummary = HabitSummary(
     id = id,

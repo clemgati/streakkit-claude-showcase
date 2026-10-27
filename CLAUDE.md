@@ -32,7 +32,9 @@ Run these, in this order, and do not report a change as working until the releva
 | --- | --- |
 | Shared logic (JVM **and** Kotlin/Native) | `./gradlew :shared:allTests` |
 | Android | `./gradlew :androidApp:assembleDebug` |
+| Compose UI (JVM, no emulator) | `./gradlew :androidApp:testDebugUnitTest` |
 | iOS | `/ios:build` |
+| iOS UI | `cd iosApp && xcodebuild test -scheme StreakKit -destination '…'` |
 | Cross-platform parity | `/kmp:parity-check` |
 
 `:shared:allTests` running on both targets is the point: a test that passes on one and fails on

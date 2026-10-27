@@ -121,7 +121,7 @@ Regenerate with `cd iosApp && xcodegen generate` and commit both.
 ## Testing strategy
 
 `commonTest` runs **twice** — once on the JVM as `androidHostTest`, once on Kotlin/Native as
-`iosSimulatorArm64Test`. `./gradlew :shared:allTests` runs both; 33 tests, 66 executions.
+`iosSimulatorArm64Test`. `./gradlew :shared:allTests` runs both; 44 tests, 88 executions.
 
 Everything needed to make that deterministic is injected:
 
@@ -135,6 +135,27 @@ Everything needed to make that deterministic is injected:
 
 A test that passes on one target and fails on the other is the most valuable signal this repo
 produces: it means something in `commonMain` is not actually common.
+
+### UI tests, and the gap that created them
+
+`commonTest` cannot catch a control that renders correctly and cannot be tapped. That bug shipped
+— the iOS week-strip cell drew a `Color.clear` fill, SwiftUI does not hit-test a clear fill, and
+the tap target shrank to its 1pt border for *unchecked* days only. It passed every gate, because
+every gate was a compile or a pure-logic test.
+
+| Suite | Runs on | Needs a device |
+| --- | --- | --- |
+| `androidApp/src/test/.../WeekStripTest.kt` | JVM, via Robolectric | no |
+| `iosApp/StreakKitUITests/WeekStripUITests.swift` | iOS Simulator, XCUITest | yes |
+
+Both query the **same accessibility identifiers** — `week-day-<iso-date>`, with a value of
+`checked` or `not checked` — which come from `DayMark.accessibilityId` and
+`DayMark.accessibilityState` in the shared module. One definition, so a cross-platform
+interaction test stays genuinely comparable rather than two tests that merely look alike.
+
+They were confirmed to fail before they were trusted: reverting `.contentShape(Circle())` turns
+two of the three iOS tests red with the diagnostic they carry. A regression test that has never
+failed proves nothing.
 
 ## What is deliberately missing
 

@@ -95,6 +95,11 @@ struct HabitCardView: View {
                     // the whole 32dp cell, so the two platforms disagreed where it mattered.
                     .contentShape(Circle())
                     .onTapGesture { onToggleDay(day.isoDate) }
+                    .accessibilityElement()
+                    .accessibilityIdentifier(day.accessibilityId)
+                    .accessibilityLabel(day.isoDate)
+                    .accessibilityValue(day.accessibilityState)
+                    .accessibilityAddTraits(.isButton)
                 }
                 .frame(maxWidth: .infinity)
             }

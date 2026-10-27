@@ -45,8 +45,8 @@ plan is written against the actual contract rather than a guess at it.
 | 1 | `domain` — types and pure logic | `./gradlew :shared:allTests` |
 | 2 | `commonTest` — a test that fails before 1 and passes after | same |
 | 3 | `presentation` — expose it on `HabitSummary`, pre-formatted | same |
-| 4 | `androidApp` | `./gradlew :androidApp:assembleDebug` |
-| 5 | `iosApp` | `/ios:build` |
+| 4 | `androidApp` | `./gradlew :androidApp:assembleDebug` and `:androidApp:testDebugUnitTest` |
+| 5 | `iosApp` | `/ios:build`, then `xcodebuild test` for the XCUITests |
 | 6 | parity | `/kmp:parity-check` |
 
 The order is load-bearing. By the time you reach step 4, every value the UI needs already exists
@@ -122,6 +122,8 @@ diagnosis arrives with the failure.
 ## Conventions a reviewer will enforce
 
 - No computation in a composable or a SwiftUI view.
+- A new tappable element that is not a `Button` needs an accessibility identifier and state, and
+  a test in both UI suites. That is the only class of bug the other gates cannot see.
 - New persisted fields on `Habit` have defaults.
 - Tests named as sentences stating the rule.
 - Nothing in `domain` reads a clock.

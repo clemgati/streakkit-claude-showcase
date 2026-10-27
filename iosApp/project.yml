@@ -71,3 +71,31 @@ targets:
           fi
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+
+  StreakKitUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: StreakKitUITests
+    dependencies:
+      - target: StreakKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.clement.streakkit.ios.uitests
+        TEST_TARGET_NAME: StreakKit
+        # A UI-test bundle still gets code-signed, so it needs an Info.plist. Letting Xcode
+        # synthesise one avoids committing a second plist that nothing ever edits.
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  StreakKit:
+    build:
+      targets:
+        StreakKit: all
+        StreakKitUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - StreakKitUITests

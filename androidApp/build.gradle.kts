@@ -21,6 +21,13 @@ android {
         compose = true
     }
 
+    testOptions {
+        unitTests {
+            // Robolectric needs the merged resources to inflate a real Android context.
+            isIncludeAndroidResources = true
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -44,4 +51,11 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Compose UI tests on the JVM via Robolectric — no emulator, so CI can run them.
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
