@@ -37,6 +37,12 @@ jobs:
           java-version: "21"
 
       - uses: anthropics/claude-code-action@v1
+        env:
+          # The `gh` CLI that Claude invokes from Bash needs its own credential; the action's
+          # `github_token` input authenticates the action, not the shell it spawns. Without this
+          # every `gh issue edit` fails and the job still reports success, which is how the first
+          # run of this workflow did nothing at all.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # Both credentials are declared; an unset secret interpolates to an empty string and
           # the action falls through to the other. Set EITHER one and the workflows just work:
