@@ -43,7 +43,8 @@ struct HabitCardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 ProgressView(value: Double(habit.completionRate30d))
                 HStack {
-                    Text("\(Int((habit.completionRate30d * 100).rounded()))% of the last 30 days")
+                    // Show one decimal place so small changes are visible day to day.
+                    Text("\(String(format: "%.1f", habit.completionRate30d * 100))% of the last 30 days")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Spacer()
