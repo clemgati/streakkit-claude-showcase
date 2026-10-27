@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+
+  "env": {
+    "GRADLE_OPTS": "-Dorg.gradle.console=plain -Dorg.gradle.welcome=never"
+  },
+
+  "permissions": {
+    "defaultMode": "default",
+
+    "allow": [
+      "Bash(./gradlew :shared:allTests*)",
+      "Bash(./gradlew :shared:test*)",
+      "Bash(./gradlew :shared:compile*)",
+      "Bash(./gradlew :shared:link*)",
+      "Bash(./gradlew :androidApp:assembleDebug*)",
+      "Bash(./gradlew tasks*)",
+      "Bash(./gradlew projects*)",
+      "Bash(./gradlew --version)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(xcodebuild -list*)",
+      "Bash(xcodebuild -showBuildSettings*)",
+      "Bash(xcrun simctl list*)",
+      "Bash(adb devices*)",
+      "Bash(adb logcat -d*)",
+      "Bash(ktlint*)",
+      "Bash(swiftformat*)",
+      "Bash(xcodegen*)",
+      "mcp__streakkit",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:kotlinlang.org)",
+      "WebFetch(domain:developer.android.com)",
+      "WebFetch(domain:developer.apple.com)"
+    ],
+
+    "ask": [
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(gh pr*)",
+      "Bash(gh issue*)",
+      "Bash(gh release*)",
+      "Edit(/.github/workflows/**)",
+      "Bash(xcrun simctl erase*)"
+    ],
+
+    "deny": [
+      "Read(./local.properties)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.keystore)",
+      "Read(./**/*.jks)",
+      "Read(./**/google-services.json)",
+      "Read(./**/GoogleService-Info.plist)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.claude/**)",
+      "Bash(sudo *)"
+    ]
+  },
+
+  "enabledMcpjsonServers": ["streakkit"],
+
+  "statusLine": {
+    "type": "command",
+    "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/statusline.sh"
+  },
+
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.sh",
+            "timeout": 15,
+            "statusMessage": "Reading toolchain state…"
+          }
+        ]
+      }
+    ],
+
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-dangerous-bash.sh",
+            "timeout": 5
+          },
+          {
+            "type": "prompt",
+            "if": "Bash(rm *)",
+            "model": "claude-haiku-4-5-20251001",
+            "timeout": 20,
+            "statusMessage": "Checking what this delete touches…",
+            "prompt": "You are a safety check for a Kotlin Multiplatform repo. A regex guard has already rejected the obviously catastrophic deletes, so your job is the novel ones it cannot pattern-match.\n\nCommand: ${tool_input.command}\n\nAllow it if it only removes regenerable artifacts: build/, .gradle/, DerivedData/, *.apk, *.ipa, xcode-frameworks/, or a file the session just created. Deny it if it removes tracked source, a .xcodeproj, a Gradle script, anything under .claude/, or anything outside this repository.\n\nReply with ONLY this JSON and nothing else:\n{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\" or \"deny\", \"permissionDecisionReason\": \"one sentence\"}}"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-secrets.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/format-edited-file.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/subagent-log.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-compact.sh",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-summary.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/notify.sh",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/session-end.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

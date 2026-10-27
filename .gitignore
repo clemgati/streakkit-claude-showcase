@@ -1,0 +1,30 @@
+# Gradle / Android
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Xcode
+iosApp/build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# Note: iosApp/StreakKit.xcodeproj is intentionally COMMITTED so the repo builds
+# without XcodeGen installed. project.yml is the source of truth; regenerate with
+#   cd iosApp && xcodegen generate
+
+# Claude Code
+.claude/settings.local.json
+.claude/logs/
+.claude/handoff.md
+
+# macOS / editors
+.DS_Store
+*.swp
+.idea/
+*.iml

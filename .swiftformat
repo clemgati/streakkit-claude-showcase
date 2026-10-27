@@ -1,0 +1,10 @@
+# Matches the Kotlin side's conventions where Swift allows it.
+--swiftversion 5.0
+--indent 4
+--maxwidth 110
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--commas always
+--self remove
+--stripunusedargs closure-only

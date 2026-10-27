@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared:
+    name: Shared module (JVM + Kotlin/Native)
+    # macOS because `:shared:allTests` includes the iosSimulatorArm64 target. Running only the
+    # JVM half on Linux would be cheaper and would miss exactly the bugs this repo cares about.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Run shared tests on every target
+        run: ./gradlew :shared:allTests --console=plain
+
+      - name: Parity gate
+        # The local MCP server's analysis is also a plain CLI check — the same code that answers
+        # `mcp__streakkit__expect_actual_matrix` in a session fails the build here.
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, sys
+          req = [
+              '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{}}}',
+              '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"expect_actual_matrix","arguments":{}}}',
+              '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"ui_parity_report","arguments":{}}}',
+          ]
+          out = subprocess.run(
+              [sys.executable, ".claude/mcp/streakkit_mcp.py"],
+              input="\n".join(req) + "\n", capture_output=True, text=True, timeout=120,
+          ).stdout
+          results = {}
+          for line in out.splitlines():
+              msg = json.loads(line)
+              if msg.get("id") in (2, 3):
+                  results[msg["id"]] = json.loads(msg["result"]["content"][0]["text"])
+
+          failed = False
+          matrix, ui = results.get(2, {}), results.get(3, {})
+          if matrix.get("missing"):
+              print(f"::error::expect declarations with no actual: {matrix['missing']}"); failed = True
+          if matrix.get("orphan_actuals"):
+              print(f"::error::actual declarations with no expect: {matrix['orphan_actuals']}"); failed = True
+          for field in ui.get("android_only", []):
+              print(f"::warning::'{field}' is rendered on Android but not iOS")
+          for field in ui.get("ios_only", []):
+              print(f"::warning::'{field}' is rendered on iOS but not Android")
+          print("Parity gate:", "FAILED" if failed else "passed")
+          sys.exit(1 if failed else 0)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: shared-test-reports
+          path: shared/build/reports/
+
+  android:
+    name: Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :androidApp:assembleDebug --console=plain
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streakkit-debug-apk
+          path: androidApp/build/outputs/apk/debug/*.apk
+
+  ios:
+    name: iOS simulator build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build for the simulator
+        # The .xcodeproj is committed, so XcodeGen is not needed in CI. A generic destination
+        # avoids pinning a device name that Xcode drops in the next runner image.
+        run: |
+          cd iosApp
+          xcodebuild -project StreakKit.xcodeproj -scheme StreakKit \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/DerivedData \
+            build | tail -20
+
+  lint:
+    name: Formatting
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - run: brew install ktlint swiftformat
+      - name: ktlint
+        run: ktlint "shared/src/**/*.kt" "androidApp/src/**/*.kt"
+      - name: swiftformat
+        run: swiftformat --lint iosApp/StreakKit

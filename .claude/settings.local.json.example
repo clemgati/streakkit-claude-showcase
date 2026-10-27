@@ -1,0 +1,44 @@
+{
+  "//": [
+    "Copy to .claude/settings.local.json for personal, uncommitted overrides.",
+    "This file is an example and is NOT read by Claude Code.",
+    "Local settings sit above the shared project file, below managed settings."
+  ],
+
+  "//model": "Pin a model for this repo only, without changing your global default.",
+  "model": "claude-opus-5-5",
+
+  "//permissions": [
+    "Two opposite postures you might want locally.",
+    "",
+    "A) Tighter than the team file — forbid the escape hatches entirely:",
+    "     \"disableBypassPermissionsMode\": \"disable\"  blocks --dangerously-skip-permissions",
+    "     \"disableAutoMode\": \"disable\"               blocks --permission-mode auto",
+    "   Neither can be re-enabled by a flag once set, which is the point.",
+    "",
+    "B) Looser — stop being asked about the things you always say yes to.",
+    "   Allow rules in a LOCAL file apply without the workspace-trust step, which is why",
+    "   'Yes, and don't ask again' writes here rather than into the shared file."
+  ],
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "allow": [
+      "Bash(./gradlew *)",
+      "Bash(xcodebuild *)",
+      "Bash(adb *)"
+    ],
+    "additionalDirectories": [
+      "../streakkit-design-notes"
+    ]
+  },
+
+  "//enabledMcpjsonServers": [
+    "The shared file enables only the local 'streakkit' server, because the others need",
+    "credentials or a network. Opt into the rest here once you have set the tokens.",
+    "github needs GITHUB_PERSONAL_ACCESS_TOKEN exported in your shell."
+  ],
+  "enabledMcpjsonServers": ["streakkit", "github", "filesystem", "context7"],
+
+  "//autoCompactThreshold": "Compact earlier than the default on a repo with long Gradle output.",
+  "autoCompactThreshold": 0.7
+}

@@ -1,0 +1,35 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+max_line_length = 120
+# ktlint_official expects the multi-line, trailing-comma signature style this codebase uses.
+# intellij_idea would demand the opposite and churn every declaration.
+ktlint_code_style = ktlint_official
+# Two ktlint_official rules make Compose builders and test assertions markedly harder to read:
+# they force `x =\n    Builder()` onto its own line and split every call chain. Disabled so the
+# formatter preserves intent rather than imposing a shape.
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_chain-method-continuation = disabled
+ktlint_function_signature_body_expression_wrapping = default
+# Test names in this repo are sentences in backticks, which is the convention the whole
+# shared module relies on to make invariants readable.
+ktlint_function_naming_ignore_when_annotated_with = Test, Composable, Preview
+# Compose composables are PascalCase by design.
+ktlint_standard_function-naming = disabled
+
+[*.swift]
+indent_size = 4
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

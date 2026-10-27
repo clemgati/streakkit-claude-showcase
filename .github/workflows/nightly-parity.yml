@@ -1,0 +1,80 @@
+# Scheduled automation: the drift check that nobody remembers to run.
+#
+# Parity decays between releases, not during them — a hotfix lands on iOS, the Android equivalent
+# is "tomorrow", and tomorrow never comes. A nightly audit turns that into an issue with a name.
+name: Nightly parity audit
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5" # 06:00 UTC, weekdays
+  workflow_dispatch: # so you can try it without waiting a day
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      # Cheap, deterministic check first. If this is clean, the model may still find
+      # judgement-level drift, but at least the mechanical part costs nothing.
+      - name: Mechanical parity report
+        id: matrix
+        run: |
+          {
+            echo 'report<<EOF'
+            python3 - <<'PY'
+          import json, subprocess, sys
+          req = [
+              '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{}}}',
+              '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"streakkit://parity-matrix"}}',
+          ]
+          out = subprocess.run([sys.executable, ".claude/mcp/streakkit_mcp.py"],
+                               input="\n".join(req) + "\n", capture_output=True, text=True, timeout=120).stdout
+          for line in out.splitlines():
+              msg = json.loads(line)
+              if msg.get("id") == 2:
+                  print(msg["result"]["contents"][0]["text"])
+          PY
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: |
+            --max-turns 20
+            --allowedTools "Read,Grep,Glob,Bash(gh issue list *),Bash(gh issue create *)"
+          prompt: |
+            Audit cross-platform parity between the Compose and SwiftUI apps.
+
+            The mechanical report is already done:
+
+            ${{ steps.matrix.outputs.report }}
+
+            Your job is the part it cannot check: read these pairs side by side and find places
+            where the two apps render the same shared field but behave differently.
+
+              androidApp/.../ui/HabitCard.kt       <-> iosApp/StreakKit/Views/HabitCardView.swift
+              androidApp/.../ui/HabitListScreen.kt <-> iosApp/StreakKit/Views/HabitListView.swift
+              androidApp/.../ui/QuoteCard.kt       <-> iosApp/StreakKit/Views/QuoteCardView.swift
+
+            Report only differences a user could notice or a developer could be misled by:
+            different wording for the same state, different rounding, a state branch handled on
+            one side only, or a tappable element that is not tappable on the other platform.
+            Idiomatic differences between the two frameworks are NOT findings.
+
+            Then:
+            - If the mechanical report shows no drift and you find nothing, print
+              "Parity holds" and create no issue. This is the expected outcome most nights.
+            - Otherwise check `gh issue list --label parity --state open` first. If an open issue
+              already covers it, do nothing. If not, open ONE issue titled
+              "Parity drift: <short description>", labelled `parity`, containing the table above
+              and your findings with file references.
+
+            Never open an issue per finding, and never open a second issue for drift that is
+            already tracked.

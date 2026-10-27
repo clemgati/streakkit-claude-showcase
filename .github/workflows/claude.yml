@@ -1,0 +1,46 @@
+# Interactive mode: no `prompt` input, so Claude waits to be mentioned.
+#
+# Mention @claude in an issue or PR comment and it responds in that thread, with the repository
+# checked out — so CLAUDE.md, the skills in .claude/, and the committed .mcp.json catalogue all
+# apply exactly as they do locally.
+name: Claude
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+jobs:
+  claude:
+    if: |
+      contains(github.event.comment.body, '@claude') ||
+      contains(github.event.issue.body, '@claude')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Swap the line above for this one if you authenticate with a subscription token:
+          # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: |
+            --max-turns 20
+            --allowedTools "Bash(./gradlew :shared:allTests*),Bash(./gradlew :androidApp:assembleDebug*),Read,Grep,Glob,Edit,Write"

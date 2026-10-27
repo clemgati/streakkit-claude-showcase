@@ -1,0 +1,73 @@
+# The Xcode project is generated from this file by XcodeGen:
+#
+#     cd iosApp && xcodegen generate
+#
+# Both this file and the generated StreakKit.xcodeproj are committed. The .xcodeproj is what
+# `xcodebuild` and CI use, so the repo builds without XcodeGen installed; this file is what you
+# edit, review, and diff — a 20-line YAML change instead of a 2,000-line pbxproj conflict.
+name: StreakKit
+
+options:
+  bundleIdPrefix: dev.clement.streakkit
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "17.0"
+
+settings:
+  base:
+    # Kotlin/Native's generated Objective-C types are not Sendable, so Swift 6 strict concurrency
+    # would require @unchecked wrappers throughout the bridge layer. Swift 5 language mode keeps
+    # the sample readable; see docs/01-architecture.md for the trade-off.
+    SWIFT_VERSION: "5.0"
+    # Gradle must be able to run from an Xcode build phase. Script sandboxing blocks it.
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+targets:
+  StreakKit:
+    type: application
+    platform: iOS
+
+    sources:
+      - path: StreakKit
+
+    info:
+      path: StreakKit/Info.plist
+      properties:
+        CFBundleDisplayName: StreakKit
+        CFBundleShortVersionString: 0.1.0
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.clement.streakkit.ios
+        TARGETED_DEVICE_FAMILY: "1"
+        # Where Gradle leaves Shared.framework for the compiler to find.
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+        OTHER_LDFLAGS:
+          - $(inherited)
+          - -framework
+          - Shared
+        # A sample has no signing team; simulator builds don't need one.
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
+
+    preBuildScripts:
+      - name: Compile Kotlin framework
+        basedOnDependencyAnalysis: false
+        outputFiles:
+          - $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)/Shared.framework
+        script: |
+          # Xcode build phases get a minimal environment, so point Gradle at a JDK explicitly.
+          if [ -z "$JAVA_HOME" ]; then
+            export JAVA_HOME="$(/usr/libexec/java_home -v 21 2>/dev/null || /usr/libexec/java_home)"
+          fi
+          cd "$SRCROOT/.."
+          ./gradlew :shared:embedAndSignAppleFrameworkForXcode
