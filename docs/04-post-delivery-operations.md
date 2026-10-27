@@ -142,6 +142,25 @@ duplicate every night is an audit people disable. Most nights it prints "Parity 
 
 `workflow_dispatch` is enabled so you can try it without waiting for the cron.
 
+### A broken workflow file cannot fail its own CI
+
+If a workflow's YAML is invalid, GitHub cannot read its `name:`, so the run appears in
+`gh run list` as the raw path — `.github/workflows/ci.yml` rather than `CI` — and
+`gh run view --log-failed` returns nothing, because no step ever started. That combination is the
+signature of a parse error rather than a test failure.
+
+It happened here: a multi-line `python3 -c` with backslash continuations inside a `run: |` block
+broke the block scalar. The gates cannot catch this, since the file that would run them is the
+broken one. Validate locally before pushing:
+
+```bash
+python3 -c "import yaml,pathlib; [yaml.safe_load(f.read_text()) for f in pathlib.Path('.github/workflows').glob('*.yml')]"
+```
+
+The wider lesson is to keep `run:` steps to plain shell. An embedded interpreter inside a YAML
+block scalar has two layers of quoting and continuation rules stacked on each other, and the
+failure is silent.
+
 ## Scheduled work from your own machine
 
 Workflows run on GitHub's schedule. For recurring work inside a local session there is `/loop`:

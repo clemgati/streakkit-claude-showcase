@@ -107,10 +107,8 @@ jobs:
         # between images and a hard-coded name is the usual cause of a green repo going red.
         run: |
           cd iosApp
-          DEVICE=$(xcrun simctl list devices available --json \
-            | python3 -c "import json,sys; ds=json.load(sys.stdin)['devices']; \
-print(next(d['name'] for rt in ds for d in ds[rt] if 'iPhone' in d['name']))")
-          echo "Testing on: $DEVICE"
+          DEVICE=$(xcrun simctl list devices available | sed -n 's/^ *\(iPhone[^(]*\)(.*/\1/p' | head -1 | sed 's/ *$//')
+          echo "Testing on: ${DEVICE:?no iPhone simulator available on this runner}"
           xcodebuild test -project StreakKit.xcodeproj -scheme StreakKit \
             -destination "platform=iOS Simulator,name=$DEVICE" \
             -derivedDataPath build/DerivedData \
