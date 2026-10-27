@@ -47,6 +47,10 @@ jobs:
         with:
           # Set EITHER secret; the unset one is an empty string and is ignored.
           # See .github/workflows/claude.yml for the full note.
+          # Authenticate as the workflow's own token rather than the Claude GitHub App, so no
+          # app installation is required. See .github/workflows/claude.yml for the trade-offs;
+          # this workflow only reads code and writes issues/comments, so they do not bite here.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: |

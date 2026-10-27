@@ -60,6 +60,26 @@ Two details that cause silent failures:
 Verify with `gh secret list` — it shows names and timestamps, never values. A secret cannot be
 read back out of GitHub by anyone, including you.
 
+### Authenticating without the Claude GitHub App
+
+All four workflows pass `github_token: ${{ secrets.GITHUB_TOKEN }}`. By default the action
+exchanges a GitHub OIDC token for an *app* token, which fails with
+`401 - Claude Code is not installed on this repository` unless the
+[Claude GitHub App](https://github.com/apps/claude) is installed. Supplying the workflow's own
+token skips that exchange, so the workflows run on a repository with no app installed.
+
+What you give up:
+
+| | With the app | With `GITHUB_TOKEN` |
+| --- | --- | --- |
+| Comment author | Claude | `github-actions[bot]` |
+| CI re-runs on commits Claude pushes | yes | **no** — GitHub suppresses workflow triggers for the default token |
+| Works on pull requests from forks | yes | no — fork PRs get a read-only token |
+
+Only the second row costs anything real, and only in `claude.yml`, which is the one workflow that
+can push code. The other three read code and write issues or comments, where the default token is
+equivalent. To restore app behaviour, install the app and delete the `github_token:` line.
+
 > **Who can trigger a run.** The action rejects actors without write access, and rejects bots
 > unless listed in `allowed_bots`. That check also applies to scheduled runs, which GitHub
 > attributes to whoever last edited the cron. On a **public** repository this is what stops a

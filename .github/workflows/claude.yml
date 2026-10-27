@@ -42,6 +42,17 @@ jobs:
           # the action falls through to the other. Set EITHER one and the workflows just work:
           #   subscription:  claude setup-token  ->  gh secret set CLAUDE_CODE_OAUTH_TOKEN
           #   metered API:   console.anthropic.com  ->  gh secret set ANTHROPIC_API_KEY
+          # Authenticate as the workflow's own token instead of the Claude GitHub App.
+          #
+          # Without this the action exchanges an OIDC token for an app token, which requires the
+          # app to be installed on the repository. Supplying github_token skips that exchange.
+          #
+          # Two consequences, both deliberate trade-offs:
+          #   - Claude's comments appear as github-actions[bot] rather than as Claude.
+          #   - GitHub does not trigger workflows on commits made with the default token, so CI
+          #     will NOT re-run on pushes this job makes. That matters here, because this
+          #     workflow can push code. Install the app and delete this line to restore both.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: |
