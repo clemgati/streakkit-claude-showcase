@@ -23,19 +23,24 @@ Or manually: install the [Claude GitHub App](https://github.com/apps/claude), th
 | `ANTHROPIC_API_KEY` | A Claude API key from the Console |
 | `CLAUDE_CODE_OAUTH_TOKEN` | A subscription. Generate with `claude setup-token` |
 
-**As committed, all four workflows use `claude_code_oauth_token`**, so a subscription is the
-zero-edit path. To move to metered API billing instead, swap that line for
-`anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}` — it is commented in `claude.yml` ready to
-uncomment. Prefer the API key if anyone other than you will maintain the repo, since an OAuth
-token is tied to the subscription of whoever ran `claude setup-token`.
+**As committed, all four workflows use `anthropic_api_key`**, billed per token to the API
+account that owns the key. To use a subscription instead, swap that line for
+`claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` — it is commented in
+`claude.yml` ready to uncomment. The API key is the better default for a repository anyone else
+might maintain, because an OAuth token is tied to the subscription of whoever ran
+`claude setup-token`.
 
 Set the secret so the value never lands in shell history or a session transcript:
 
 ```bash
-claude setup-token          # prints the token; copy it
-gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo <owner>/<repo>
+# Create a key at https://console.anthropic.com → API keys, copy it, then:
+gh secret set ANTHROPIC_API_KEY --repo <owner>/<repo> \
+  && gh secret list --repo <owner>/<repo>
 #   ? Paste your secret:   <- hidden input, not echoed, not stored in history
 ```
+
+The `&&` matters: the listing prints only if the set succeeded, so a silent failure cannot look
+like success.
 
 Verify with `gh secret list` — it shows names and timestamps, never values. A secret cannot be
 read back out of GitHub by anyone, including you.
