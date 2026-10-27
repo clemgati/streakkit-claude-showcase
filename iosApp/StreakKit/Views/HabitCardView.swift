@@ -28,6 +28,18 @@ struct HabitCardView: View {
 
             weekStrip
 
+            // Sits directly under the strip because it counts exactly those seven days
+            // (StreakCalculator invariant 5). The label text comes from the shared module.
+            HStack(spacing: 6) {
+                Text(habit.weeklyGoalLabel)
+                    .font(.caption)
+                    .fontWeight(habit.weeklyGoalMet ? .semibold : .regular)
+                    .foregroundStyle(habit.weeklyGoalMet ? Color.accentColor : Color.secondary)
+                if habit.weeklyGoalMet {
+                    Text("🎯").font(.caption)
+                }
+            }
+
             VStack(alignment: .leading, spacing: 4) {
                 ProgressView(value: Double(habit.completionRate30d))
                 HStack {

@@ -31,7 +31,11 @@ import sys
 from pathlib import Path
 
 SERVER_NAME = "streakkit"
-SERVER_VERSION = "1.0.0"
+SERVER_VERSION = "1.1.0"
+
+# Must match StreakCalculator.WEEK_LENGTH. The oracle is only useful while it agrees with the
+# documented invariants — see .claude/skills/streak-rules/SKILL.md.
+WEEK_LENGTH = 7
 FALLBACK_PROTOCOL = "2025-06-18"
 
 # The server sits at <root>/.claude/mcp/, so the repo root is two levels up. An explicit
@@ -141,9 +145,19 @@ def ui_parity_report() -> dict:
 
     rows = []
     for field in fields:
-        word = re.compile(rf"\b{re.escape(field)}\b")
-        on_android = bool(word.search(android_text))
-        on_ios = bool(word.search(ios_text))
+        # Match property *access* (`habit.weeklyGoalLabel`), not the bare word.
+        #
+        # Bare-word matching produced false positives in both directions: a named argument in a
+        # Compose @Preview (`weeklyDone = 5`) counted as Android rendering the field, and a local
+        # SwiftUI `@State var weeklyGoal` counted as iOS rendering it. Both languages read these
+        # off the summary with a dot, so anchoring on that is both stricter and more accurate.
+        #
+        # Known limitation: a Kotlin `with(habit) { weeklyGoalLabel }` or a Swift destructuring
+        # would be missed. Neither appears in this codebase, and the failure mode is a false
+        # *drift* report, which gets investigated — not a false clean bill of health.
+        access = re.compile(rf"\.{re.escape(field)}\b")
+        on_android = bool(access.search(android_text))
+        on_ios = bool(access.search(ios_text))
         rows.append({
             "field": field,
             "android": on_android,
@@ -199,14 +213,20 @@ def streak_oracle(check_ins, today: str, window_days: int = 30) -> dict:
         previous = day
         longest = max(longest, run)
 
-    window_start = now - datetime.timedelta(days=window_days - 1)
-    hits = sum(1 for day in days if window_start <= day <= now)
+    def in_window(window_days_: int) -> int:
+        start = now - datetime.timedelta(days=window_days_ - 1)
+        return sum(1 for day in days if start <= day <= now)
+
+    hits = in_window(window_days)
 
     return {
         "currentStreak": current,
         "longestStreak": longest,
         "completionRate": round(hits / window_days, 6),
         "windowDays": window_days,
+        # Invariant 5: the same rolling seven days the week strip draws.
+        "weeklyProgress": in_window(WEEK_LENGTH),
+        "weekLength": WEEK_LENGTH,
         "today": today,
         "note": "Independent Python implementation. If Kotlin disagrees, one of them is wrong.",
     }

@@ -80,6 +80,31 @@ fun HabitCard(
 
             WeekStrip(week = habit.week, onToggleDay = onToggleDay)
 
+            // Sits directly under the strip because it counts exactly those seven days
+            // (StreakCalculator invariant 5). The label itself comes from the shared module.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = habit.weeklyGoalLabel,
+                    style = MaterialTheme.typography.labelMedium,
+                    color =
+                        if (habit.weeklyGoalMet) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    fontWeight = if (habit.weeklyGoalMet) FontWeight.SemiBold else FontWeight.Normal,
+                )
+                if (habit.weeklyGoalMet) {
+                    Text(
+                        text = "🎯",
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+            }
+
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 LinearProgressIndicator(
                     progress = { habit.completionRate30d },
@@ -190,6 +215,9 @@ private fun HabitCardPreview() {
                                 isoDate = "2026-10-2$index",
                             )
                         },
+                    weeklyGoal = 5,
+                    weeklyDone = 5,
+                    weeklyGoalLabel = "5 / 5 this week",
                 ),
             onToggleToday = {},
             onToggleDay = {},

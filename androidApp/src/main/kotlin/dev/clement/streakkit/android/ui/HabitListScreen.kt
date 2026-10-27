@@ -114,8 +114,8 @@ fun HabitListScreen(
     if (isAddSheetVisible) {
         AddHabitDialog(
             onDismiss = { isAddSheetVisible = false },
-            onConfirm = { name, emoji ->
-                store.addHabit(name, emoji)
+            onConfirm = { name, emoji, weeklyGoal ->
+                store.addHabit(name, emoji, weeklyGoal)
                 isAddSheetVisible = false
             },
         )

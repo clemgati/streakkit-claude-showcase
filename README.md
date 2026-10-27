@@ -9,7 +9,7 @@ codebase.
 | Shared logic | Kotlin Multiplatform (`shared/`) — domain, persistence, networking, presentation |
 | Android | Jetpack Compose + Material 3 |
 | iOS | Native SwiftUI |
-| Tests | 33 tests, run on **both** JVM and Kotlin/Native |
+| Tests | 41 tests, run on **both** JVM and Kotlin/Native (82 executions) |
 
 <p align="center">
   <img src="docs/images/ios-habit-list.png" width="300" alt="StreakKit on iOS">
@@ -21,9 +21,9 @@ Same streak numbers, same percentages, same week strip — because both screens 
 
 ## The app
 
-Four things: list habits, add one, check in or undo for any day in the last week, see your
-streak and 30-day completion. Plus one keyless network call for a daily quote, so there is an
-offline branch worth testing.
+Five things: list habits, add one with a weekly goal, check in or undo for any day in the last
+week, see your streak and 30-day completion, and track progress against that goal. Plus one
+keyless network call for a daily quote, so there is an offline branch worth testing.
 
 It is small on purpose. It exists to give the tooling something real to act on.
 

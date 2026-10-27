@@ -33,7 +33,13 @@ data class HabitSummary(
     val completionRate30d: Float,
     val checkedInToday: Boolean,
     val week: List<DayMark>,
-)
+    val weeklyGoal: Int,
+    val weeklyDone: Int,
+    /** Pre-rendered so neither UI can format it differently. */
+    val weeklyGoalLabel: String,
+) {
+    val weeklyGoalMet: Boolean get() = weeklyDone >= weeklyGoal
+}
 
 /** One cell of the seven-day strip under each habit. */
 data class DayMark(
@@ -60,4 +66,9 @@ internal fun Habit.summarize(today: LocalDate): HabitSummary = HabitSummary(
                 isoDate = date.toString(),
             )
         },
+    weeklyGoal = weeklyGoal,
+    weeklyDone = StreakCalculator.weeklyProgress(checkIns, today),
+    // Formatted here, once. If either UI built this string itself the two could drift —
+    // which is the defect class this whole module exists to prevent.
+    weeklyGoalLabel = "${StreakCalculator.weeklyProgress(checkIns, today)} / $weeklyGoal this week",
 )

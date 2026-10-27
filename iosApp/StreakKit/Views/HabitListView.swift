@@ -60,8 +60,8 @@ struct HabitListView: View {
                 }
             }
             .sheet(isPresented: $isAddSheetPresented) {
-                AddHabitView { name, emoji in
-                    viewModel.addHabit(name: name, emoji: emoji)
+                AddHabitView { name, emoji, weeklyGoal in
+                    viewModel.addHabit(name: name, emoji: emoji, weeklyGoal: weeklyGoal)
                     isAddSheetPresented = false
                 }
             }

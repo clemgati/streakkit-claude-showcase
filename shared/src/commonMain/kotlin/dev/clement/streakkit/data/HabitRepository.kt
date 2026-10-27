@@ -29,8 +29,15 @@ class HabitRepository(
         name: String,
         emoji: String,
         today: LocalDate,
+        weeklyGoal: Int = Habit.DEFAULT_WEEKLY_GOAL,
     ): Habit {
-        val habit = Habit(id = newId(), name = name.trim(), emoji = emoji, createdOn = today)
+        val habit = Habit(
+            id = newId(),
+            name = name.trim(),
+            emoji = emoji,
+            createdOn = today,
+            weeklyGoal = weeklyGoal,
+        )
         mutate { it + habit }
         return habit
     }

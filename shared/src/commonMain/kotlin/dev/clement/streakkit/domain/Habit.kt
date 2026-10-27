@@ -27,11 +27,30 @@ data class Habit(
         @Serializable(with = IsoLocalDateSerializer::class)
         LocalDate,
     > = emptySet(),
+    /**
+     * Target days per rolling week, `1..7`.
+     *
+     * Defaulted, not required: habits persisted before this field existed must still decode, and
+     * `HabitRepositoryTest` asserts exactly that. Every future persisted field needs the same
+     * treatment.
+     */
+    val weeklyGoal: Int = DEFAULT_WEEKLY_GOAL,
 ) {
+    init {
+        require(weeklyGoal in 1..StreakCalculator.WEEK_LENGTH) {
+            "weeklyGoal must be 1..${StreakCalculator.WEEK_LENGTH}, was $weeklyGoal"
+        }
+    }
+
     fun isCheckedIn(date: LocalDate): Boolean = date in checkIns
 
     /** Returns a copy with [date] added if absent, or removed if present. */
     fun toggling(date: LocalDate): Habit = copy(checkIns = if (date in checkIns) checkIns - date else checkIns + date)
+
+    companion object {
+        /** Five days a week: ambitious enough to mean something, slack enough to survive a bad day. */
+        const val DEFAULT_WEEKLY_GOAL: Int = 5
+    }
 }
 
 /**

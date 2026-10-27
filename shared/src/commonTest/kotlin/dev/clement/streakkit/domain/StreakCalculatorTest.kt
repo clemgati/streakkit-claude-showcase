@@ -102,6 +102,47 @@ class StreakCalculatorTest {
         }
     }
 
+    // --- weeklyProgress (invariant 5) ------------------------------------------------------------
+
+    @Test
+    fun `weekly progress counts the rolling seven days ending today`() {
+        assertEquals(3, StreakCalculator.weeklyProgress(daysAgo(0, 2, 5), today))
+    }
+
+    @Test
+    fun `weekly progress excludes the eighth day back`() {
+        // The strip draws d-6..d-0; a check-in at d-7 is off the left edge and must not be counted,
+        // or the number would contradict the ticks directly above it.
+        assertEquals(1, StreakCalculator.weeklyProgress(daysAgo(6, 7, 8), today))
+    }
+
+    @Test
+    fun `weekly progress of an untouched habit is zero`() {
+        assertEquals(0, StreakCalculator.weeklyProgress(emptySet(), today))
+    }
+
+    @Test
+    fun `weekly progress never exceeds seven`() {
+        assertEquals(7, StreakCalculator.weeklyProgress(daysAgo(0, 1, 2, 3, 4, 5, 6, 7, 8), today))
+    }
+
+    @Test
+    fun `weekly progress counts exactly the days the strip draws`() {
+        // Invariant 5 stated as an equivalence rather than a number: whatever recentDays returns
+        // is precisely what weeklyProgress counts.
+        val checkIns = daysAgo(0, 3, 6, 7, 20)
+        val onStrip = StreakCalculator.recentDays(today).count { it in checkIns }
+
+        assertEquals(onStrip, StreakCalculator.weeklyProgress(checkIns, today))
+    }
+
+    @Test
+    fun `check-ins in window rejects a non-positive window`() {
+        assertFailsWith<IllegalArgumentException> {
+            StreakCalculator.checkInsInWindow(daysAgo(0), today, windowDays = 0)
+        }
+    }
+
     // --- recentDays ----------------------------------------------------------------------------
 
     @Test

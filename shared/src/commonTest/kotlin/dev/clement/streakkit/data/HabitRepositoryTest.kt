@@ -4,6 +4,7 @@ import dev.clement.streakkit.domain.Habit
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -82,6 +83,34 @@ class HabitRepositoryTest {
         repo.delete(drop.id)
 
         assertEquals(listOf(keep.id), repo.habits.value.map { it.id })
+    }
+
+    @Test
+    fun `a habit stored before weeklyGoal existed still decodes`() {
+        // Exactly the payload the previous version wrote: no weeklyGoal key at all. If this
+        // breaks, every existing user silently loses their habits on upgrade.
+        val legacy =
+            """
+            [{"id":"id-0","name":"Floss","emoji":"🦷","createdOn":"2026-10-20",
+              "checkIns":["2026-10-25","2026-10-26"]}]
+            """.trimIndent()
+        val store = InMemoryKeyValueStore(mapOf(HabitRepository.HABITS_KEY to legacy))
+
+        val habit = repository(store).only()
+
+        assertEquals("Floss", habit.name)
+        assertEquals(2, habit.checkIns.size)
+        assertEquals(Habit.DEFAULT_WEEKLY_GOAL, habit.weeklyGoal, "missing field falls back to the default")
+    }
+
+    @Test
+    fun `a weekly goal outside 1 to 7 is rejected`() {
+        assertFailsWith<IllegalArgumentException> {
+            Habit(id = "x", name = "n", emoji = "e", createdOn = today, weeklyGoal = 0)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            Habit(id = "x", name = "n", emoji = "e", createdOn = today, weeklyGoal = 8)
+        }
     }
 
     @Test

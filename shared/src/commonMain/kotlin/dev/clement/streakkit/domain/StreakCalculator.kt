@@ -15,8 +15,13 @@ import kotlinx.datetime.minus
  * 2. A check-in two or more days old never contributes to the current streak.
  * 3. [longestStreak] is historical and ignores today entirely.
  * 4. Nothing here reads a clock. The caller supplies `today`, which is what makes it testable.
+ * 5. [weeklyProgress] counts the same rolling seven days that [recentDays] draws, so the figure
+ *    and the strip can never contradict each other. Rolling, not calendar — see its KDoc.
  */
 object StreakCalculator {
+    /** Days in the rolling week used by [recentDays] and [weeklyProgress]. */
+    const val WEEK_LENGTH: Int = 7
+
     private val oneDay = DatePeriod(days = 1)
 
     /** Consecutive days ending today or yesterday. `0` when the streak is broken or unstarted. */
@@ -57,6 +62,23 @@ object StreakCalculator {
     }
 
     /**
+     * Check-ins falling inside the last [windowDays] days, inclusive of [today].
+     *
+     * The shared primitive behind both [completionRate] and [weeklyProgress], so the two can
+     * never disagree about where a window starts.
+     */
+    fun checkInsInWindow(
+        checkIns: Set<LocalDate>,
+        today: LocalDate,
+        windowDays: Int,
+    ): Int {
+        require(windowDays > 0) { "windowDays must be positive, was $windowDays" }
+
+        val windowStart = today.minus(DatePeriod(days = windowDays - 1))
+        return checkIns.count { it >= windowStart && it <= today }
+    }
+
+    /**
      * Share of the last [windowDays] days (inclusive of [today]) that were checked in, as `0f..1f`.
      * Days before the habit existed are not excluded — this is a plain window, not an average.
      */
@@ -64,13 +86,20 @@ object StreakCalculator {
         checkIns: Set<LocalDate>,
         today: LocalDate,
         windowDays: Int = 30,
-    ): Float {
-        require(windowDays > 0) { "windowDays must be positive, was $windowDays" }
+    ): Float = checkInsInWindow(checkIns, today, windowDays).toFloat() / windowDays
 
-        val windowStart = today.minus(DatePeriod(days = windowDays - 1))
-        val hits = checkIns.count { it >= windowStart && it <= today }
-        return hits.toFloat() / windowDays
-    }
+    /**
+     * Days checked in during the last seven, inclusive of [today] — invariant 5.
+     *
+     * This is deliberately the *same* window [recentDays] draws, so the "3 / 5 this week" figure
+     * can never contradict the ticks on the strip directly above it. It is a rolling seven days,
+     * not a calendar week: a Monday reset would make the number drop to zero overnight, which
+     * reads as data loss to a user mid-streak.
+     */
+    fun weeklyProgress(
+        checkIns: Set<LocalDate>,
+        today: LocalDate,
+    ): Int = checkInsInWindow(checkIns, today, WEEK_LENGTH)
 
     /**
      * The last [days] dates ending at [today], oldest first. Used by both UIs to draw the
@@ -78,7 +107,7 @@ object StreakCalculator {
      */
     fun recentDays(
         today: LocalDate,
-        days: Int = 7,
+        days: Int = WEEK_LENGTH,
     ): List<LocalDate> {
         require(days > 0) { "days must be positive, was $days" }
         return (days - 1 downTo 0).map { offset -> today.minus(DatePeriod(days = offset)) }

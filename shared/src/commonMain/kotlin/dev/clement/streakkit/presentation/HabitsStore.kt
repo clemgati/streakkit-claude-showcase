@@ -1,6 +1,8 @@
 package dev.clement.streakkit.presentation
 
 import dev.clement.streakkit.data.HabitRepository
+import dev.clement.streakkit.domain.Habit
+import dev.clement.streakkit.domain.StreakCalculator
 import dev.clement.streakkit.platform.platformName
 import dev.clement.streakkit.platform.systemToday
 import dev.clement.streakkit.remote.OfflineQuotes
@@ -52,12 +54,22 @@ class HabitsStore(
 
     // --- intents -------------------------------------------------------------------------------
 
+    /**
+     * [weeklyGoal] is clamped rather than rejected: a UI that offers a bad value is a UI bug, and
+     * silently dropping the user's new habit over it would be the worse failure.
+     */
     fun addHabit(
         name: String,
         emoji: String,
+        weeklyGoal: Int = Habit.DEFAULT_WEEKLY_GOAL,
     ) {
         if (name.isBlank()) return
-        repository.add(name, emoji.ifBlank { DEFAULT_EMOJI }, today())
+        repository.add(
+            name = name,
+            emoji = emoji.ifBlank { DEFAULT_EMOJI },
+            today = today(),
+            weeklyGoal = weeklyGoal.coerceIn(1, StreakCalculator.WEEK_LENGTH),
+        )
     }
 
     fun toggleToday(habitId: String) = repository.toggleCheckIn(habitId, today())

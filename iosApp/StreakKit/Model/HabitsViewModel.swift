@@ -42,8 +42,10 @@ final class HabitsViewModel {
 
     // MARK: - Intents
 
-    func addHabit(name: String, emoji: String) {
-        store.addHabit(name: name, emoji: emoji)
+    /// Kotlin default arguments do not survive the Objective-C bridge, so weeklyGoal is explicit
+    /// here where Compose can rely on the default.
+    func addHabit(name: String, emoji: String, weeklyGoal: Int32) {
+        store.addHabit(name: name, emoji: emoji, weeklyGoal: weeklyGoal)
     }
 
     func toggleToday(habitId: String) {
