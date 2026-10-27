@@ -63,7 +63,7 @@ delete, and a deleted hook protects nothing.
 ```json
 "ask": [
   "Bash(git commit*)", "Bash(git push*)",
-  "Bash(gh pr*)", "Bash(gh issue*)", "Bash(gh release*)",
+  "Bash(gh pr*)", "Bash(gh release*)",
   "Edit(/.github/workflows/**)",
   "Bash(xcrun simctl erase*)"
 ]
