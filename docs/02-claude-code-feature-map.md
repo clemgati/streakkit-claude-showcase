@@ -70,6 +70,44 @@ already in hand instead of spending a turn fetching them.
 `disable-model-invocation: true` on `/kmp:new-feature` and `/ship:triage` is deliberate — both
 are expensive and both should be a human's decision.
 
+### Rules for `!` blocks, learned the hard way
+
+A `!` block runs **before** Claude sees the command, and **any non-zero exit silently aborts the
+whole command**. There is no error message: `claude -p "/your-command"` returns an empty result,
+zero turns, and exit status 0. Every command in this repo shipped broken for exactly this reason,
+and it took a dozen throwaway probe commands to localise.
+
+What breaks a block, all established by bisection:
+
+| Construct | Works? | Why |
+| --- | --- | --- |
+| `$1`, `$2` | no | Fails whether or not an argument is supplied |
+| `${1:-default}` | no | `$1` is substituted *inside* the braces, producing invalid bash |
+| `X="value"` on its own line | no | A bare assignment is a subcommand the permission layer cannot classify |
+| `$(cmd)` inside a pipeline | no | Commands inside `$()` are checked separately, and the compound shape matches no rule |
+| `$ARGUMENTS` | yes | Substituted as plain text |
+| `$(cmd)` on its own, e.g. `echo "$(git describe)"` | yes | |
+| pipelines, `|| true`, `if/then/fi` | yes | |
+
+**The rule that falls out: one simple command per block, ending in `|| true`, using `$ARGUMENTS`
+and never `$1`.** Anything more elaborate belongs in the prose, where you ask Claude to run it as
+an ordinary tool call.
+
+`/ship:release-notes` shows the shape — two one-line blocks give the last tag and the recent
+history, and the prose tells Claude to run `git diff --stat <ref>..HEAD` itself when it needs
+more.
+
+**How to tell you have hit this:** `turns=0` with an empty result.
+
+```bash
+claude -p "/your-command" --output-format json \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["num_turns"])'
+```
+
+Zero means the expansion aborted. An *unknown* command behaves differently — one turn, and a
+reply saying it does not exist — so `turns=0` specifically means "recognised, then failed to
+expand".
+
 ---
 
 ## 3. Skills — `.claude/skills/`
