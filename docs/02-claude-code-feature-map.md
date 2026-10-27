@@ -40,10 +40,10 @@ Namespaced by directory, so `.claude/commands/kmp/test.md` is `/kmp:test`.
 | `/kmp:test` | Runs `:shared:allTests`, explains failures | `` !`bash` `` pre-execution, `model`, `effort` |
 | `/kmp:parity-check` | Cross-platform drift audit | MCP resource reference with `@server:uri` |
 | `/kmp:new-feature <desc>` | Shared-logic-first feature workflow | `$ARGUMENTS`, `@file` refs, `disable-model-invocation` |
-| `/android:build`, `/ios:build` | Build + explain the failure | `allowed-tools`, positional `$1` |
-| `/android:run`, `/ios:run` | Install, launch, screenshot | Multi-line `` ```! `` blocks |
-| `/ship:release-notes [ref]` | Release notes from git history | Shell interpolation of an argument |
-| `/ship:triage <issue>` | Triage a GitHub issue | `$1`, `gh` integration |
+| `/android:build`, `/ios:build` | Build + explain the failure | `allowed-tools`, `model`/`effort` |
+| `/android:run`, `/ios:run` | Install, launch, screenshot | Multi-command `` ```! `` blocks, image reading |
+| `/ship:release-notes [ref]` | Release notes from git history | `$ARGUMENTS` in prose, one-command `!` blocks |
+| `/ship:triage <issue>` | Triage a GitHub issue | `$ARGUMENTS` in a `!` block, `gh` + MCP |
 | `/dev:checkpoint` | Write a handoff note | See [context engineering](#8-context-engineering) |
 
 **Mechanics worth copying:**
@@ -59,7 +59,7 @@ disable-model-invocation: true                  # user-only; never auto-triggere
 ---
 
 ```!
-./gradlew :shared:allTests $ARGUMENTS
+./gradlew :shared:allTests --console=plain | tail -40 || true
 ```
 ```
 
