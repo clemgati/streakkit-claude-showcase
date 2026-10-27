@@ -534,7 +534,70 @@ def handle(request: dict):
     raise LookupError(f"method not found: {method}")
 
 
+def cli(argv: list) -> int:
+    """A plain command-line face for the same analysis the MCP tools expose.
+
+    Why both: an MCP tool is reachable from a session, but not from CI, a git hook, or an agent
+    whose Bash allow-list is a prefix rule. Piping JSON-RPC into stdin needs a shell pipeline,
+    and `printf ... | python3 ...` does not match a `Bash(python3 ...)` prefix rule — so the
+    stdio-only version was effectively unusable from a locked-down agent. One subcommand is.
+
+    Exit codes: 0 clean, 1 drift found (so `parity` works as a CI gate), 2 bad usage.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="streakkit_mcp.py",
+        description="StreakKit repo analysis. With no arguments, runs as an MCP stdio server.",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    oracle = sub.add_parser("oracle", help="streak numbers from an independent implementation")
+    oracle.add_argument("--check-ins", required=True,
+                        help="comma-separated ISO dates, e.g. 2026-10-25,2026-10-26")
+    oracle.add_argument("--today", required=True, help="ISO date to treat as today")
+    oracle.add_argument("--window-days", type=int, default=30)
+
+    sub.add_parser("expect-actual", help="expect/actual coverage as JSON")
+    sub.add_parser("ui-parity", help="shared UI-state field usage as JSON")
+    sub.add_parser("stats", help="per-module file and line counts as JSON")
+    sub.add_parser("parity", help="full matrix as markdown; exits 1 when drift is found")
+
+    args = parser.parse_args(argv)
+
+    if args.command == "oracle":
+        dates = [d.strip() for d in args.check_ins.split(",") if d.strip()]
+        try:
+            print(json.dumps(streak_oracle(dates, args.today, args.window_days), indent=2))
+        except ValueError as exc:
+            print(f"bad date: {exc}", file=sys.stderr)
+            return 2
+        return 0
+
+    if args.command == "expect-actual":
+        result = expect_actual_matrix()
+        print(json.dumps(result, indent=2))
+        return 0 if result["ok"] else 1
+
+    if args.command == "ui-parity":
+        result = ui_parity_report()
+        print(json.dumps(result, indent=2))
+        return 0 if result.get("ok") else 1
+
+    if args.command == "stats":
+        print(json.dumps(project_stats(), indent=2))
+        return 0
+
+    # parity
+    print(render_parity_markdown())
+    matrix, ui = expect_actual_matrix(), ui_parity_report()
+    return 0 if (matrix["ok"] and ui.get("ok")) else 1
+
+
 def main() -> None:
+    if len(sys.argv) > 1:
+        raise SystemExit(cli(sys.argv[1:]))
+
     log(f"serving {ROOT}")
     for line in sys.stdin:
         line = line.strip()

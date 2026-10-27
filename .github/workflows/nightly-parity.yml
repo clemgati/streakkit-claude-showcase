@@ -24,22 +24,12 @@ jobs:
       # judgement-level drift, but at least the mechanical part costs nothing.
       - name: Mechanical parity report
         id: matrix
+        # Cheap and deterministic. `parity` exits 1 when it finds drift, so `|| true` keeps the
+        # job alive to let the model do the judgement half either way.
         run: |
           {
             echo 'report<<EOF'
-            python3 - <<'PY'
-          import json, subprocess, sys
-          req = [
-              '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{}}}',
-              '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"streakkit://parity-matrix"}}',
-          ]
-          out = subprocess.run([sys.executable, ".claude/mcp/streakkit_mcp.py"],
-                               input="\n".join(req) + "\n", capture_output=True, text=True, timeout=120).stdout
-          for line in out.splitlines():
-              msg = json.loads(line)
-              if msg.get("id") == 2:
-                  print(msg["result"]["contents"][0]["text"])
-          PY
+            python3 .claude/mcp/streakkit_mcp.py parity || true
             echo EOF
           } >> "$GITHUB_OUTPUT"
 

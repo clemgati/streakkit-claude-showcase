@@ -52,6 +52,26 @@ full user privileges, so it is a trust boundary like any other — a server that
 shell string is a server that has handed out a shell. The allow-list lives in the server rather
 than in Claude Code's permission rules because the server is the thing that can be sure.
 
+## The same analysis from a command line
+
+With no arguments the script is an MCP stdio server. With a subcommand it is an ordinary CLI:
+
+```bash
+python3 .claude/mcp/streakkit_mcp.py parity          # markdown matrix; exits 1 on drift
+python3 .claude/mcp/streakkit_mcp.py expect-actual   # JSON; exits 1 if an actual is missing
+python3 .claude/mcp/streakkit_mcp.py ui-parity       # JSON
+python3 .claude/mcp/streakkit_mcp.py stats           # JSON
+python3 .claude/mcp/streakkit_mcp.py oracle \
+  --check-ins 2026-10-21,2026-10-22,2026-10-23 --today 2026-10-26
+```
+
+**Why both faces.** An MCP tool is reachable from a session but not from CI, a git hook, or an
+agent whose Bash permissions are prefix rules. Driving the stdio server needs a shell pipeline,
+and `printf … | python3 …` does not match a `Bash(python3 …)` prefix rule — so the stdio-only
+version was quietly unusable from a locked-down agent. The issue-triage workflow failed on
+exactly that, with `permission_denials_count: 2` and no visible error. One subcommand fixes it,
+and `ci.yml` uses the same entry point as its parity gate.
+
 ## Trying it
 
 ```bash
